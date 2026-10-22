@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 const mongoose = require('mongoose');
 
 const {
@@ -21,14 +22,28 @@ const {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const RATE_PER_SQFT = Number(process.env.RATE_PER_SQFT) || 20;
+
+// Load seed config if present
+let seedConfig = {};
+try {
+  const seedPath = path.join(__dirname, 'seed.json');
+  if (fs.existsSync(seedPath)) {
+    seedConfig = JSON.parse(fs.readFileSync(seedPath, 'utf-8'));
+  }
+} catch (e) {
+  console.warn('Could not read seed.json for dynamic config');
+}
+
+const RATE_PER_SQFT = Number(process.env.RATE_PER_SQFT) || (seedConfig.mural && seedConfig.mural.ratePerSqFt) || 150;
+const CURRENCY = seedConfig.currency || 'INR';
 
 // Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend assets from public/
+// Serve static frontend assets and images from public/
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 
 // ============================================================================
 // Public / Auth Utility Endpoints
@@ -36,7 +51,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // App Configuration (Pricing rate from seed data / env)
 app.get('/api/config', (req, res) => {
-  res.json({ ratePerSqFt: RATE_PER_SQFT });
+  res.json({
+    studioName: 'Trail Studio',
+    ratePerSqFt: RATE_PER_SQFT,
+    currency: CURRENCY,
+  });
 });
 
 // List users for demo quick-switch testing in the UI
@@ -62,8 +81,8 @@ app.post('/api/auth/login', async (req, res) => {
     let user = await User.findOne({ email: cleanEmail });
 
     if (!user) {
-      // Auto-register new user; if email contains 'admin' or role is explicitly set to admin, honor it
-      const assignedRole = role === 'admin' ? 'admin' : 'customer';
+      const isStudio = role === 'admin' || role === 'studio' || cleanEmail.includes('studio');
+      const assignedRole = isStudio ? 'studio' : 'customer';
       user = await User.create({ email: cleanEmail, role: assignedRole });
     }
 
@@ -95,11 +114,10 @@ app.get('/api/paintings', authenticate, async (req, res) => {
   }
 });
 
-// 2. POST /api/paintings (Add painting - Admin only)
-// Note: Per spec, only the studio/admin can add paintings.
-app.post('/api/paintings', authenticate, requireRole('admin'), async (req, res) => {
+// 2. POST /api/paintings (Add painting - Studio/Admin only)
+app.post('/api/paintings', authenticate, requireRole('admin', 'studio'), async (req, res) => {
   try {
-    const { title, price, description } = req.body;
+    const { title, price, artist, description, imageUrl } = req.body;
 
     if (!title || typeof title !== 'string' || !title.trim()) {
       return res.status(400).json({ error: 'Painting title is required.' });
@@ -112,13 +130,15 @@ app.post('/api/paintings', authenticate, requireRole('admin'), async (req, res) 
 
     const painting = await Painting.create({
       title: title.trim(),
+      artist: artist ? artist.trim() : 'Trail Studio Artist',
       price: priceNum,
       description: description ? description.trim() : '',
+      imageUrl: imageUrl ? imageUrl.trim() : '',
       isAvailable: true,
     });
 
     res.status(201).json({
-      message: 'Painting added successfully.',
+      message: 'Painting added successfully to Trail Studio.',
       painting,
     });
   } catch (err) {
@@ -128,7 +148,6 @@ app.post('/api/paintings', authenticate, requireRole('admin'), async (req, res) 
 
 // 3. POST /api/paintings/:id/buy (Buy painting - Customer only)
 // Atomic concurrency check: Painting is one of a kind and can only be bought once.
-// We use findOneAndUpdate with condition { _id: id, isAvailable: true } to prevent race conditions.
 app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -145,7 +164,6 @@ app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async 
     );
 
     if (!updatedPainting) {
-      // Check if it exists or was already purchased
       const existingPainting = await Painting.findById(id);
       if (!existingPainting) {
         return res.status(404).json({ error: 'Painting not found.' });
@@ -176,10 +194,11 @@ app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async 
 // Orders Endpoints
 // ============================================================================
 
-// GET /api/orders (Customer sees only what they own; Admin sees all)
+// GET /api/orders (Customer sees only what they own; Studio sees all)
 app.get('/api/orders', authenticate, async (req, res) => {
   try {
-    const query = req.user.role === 'admin' ? {} : { customerId: req.user._id };
+    const isStudio = req.user.role === 'admin' || req.user.role === 'studio';
+    const query = isStudio ? {} : { customerId: req.user._id };
     const orders = await Order.find(query)
       .populate('paintingId')
       .populate('customerId', 'email role')
@@ -192,7 +211,6 @@ app.get('/api/orders', authenticate, async (req, res) => {
 });
 
 // PATCH /api/orders/:id/cancel (Customer only - cancels their order and frees painting)
-// Per spec: "A customer can cancel an order, and the painting becomes available again."
 app.patch('/api/orders/:id/cancel', authenticate, requireRole('customer'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -221,7 +239,7 @@ app.patch('/api/orders/:id/cancel', authenticate, requireRole('customer'), async
     await Painting.findByIdAndUpdate(order.paintingId, { isAvailable: true });
 
     res.json({
-      message: 'Order cancelled successfully. The painting is now available again.',
+      message: 'Order cancelled successfully. The painting is now available again in Trail Studio.',
       order,
     });
   } catch (err) {
@@ -234,12 +252,10 @@ app.patch('/api/orders/:id/cancel', authenticate, requireRole('customer'), async
 // ============================================================================
 
 // 1. POST /api/bookings (Book a wall date 7-90 days away, size 10-500 sq ft)
-// Customer only; verifies date uniqueness & range, calculates price, handles double-booking.
 app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res) => {
   try {
     const { date, size, address } = req.body;
 
-    // Validate size (10 - 500 sq ft)
     const sizeNum = Number(size);
     if (isNaN(sizeNum) || sizeNum < 10 || sizeNum > 500) {
       return res.status(400).json({
@@ -247,14 +263,12 @@ app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res
       });
     }
 
-    // Validate address
     if (!address || typeof address !== 'string' || !address.trim()) {
       return res.status(400).json({
         error: 'Please provide a valid physical address for the wall painting.',
       });
     }
 
-    // Validate date format & normalize to UTC midnight
     const normalizedDate = normalizeDate(date);
     if (!normalizedDate) {
       return res.status(400).json({
@@ -262,7 +276,6 @@ app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res
       });
     }
 
-    // Date range validation: 7 to 90 days away from today
     const nowUtc = normalizeDate(new Date());
     const diffMs = normalizedDate.getTime() - nowUtc.getTime();
     const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
@@ -285,7 +298,7 @@ app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res
       });
     }
 
-    // Calculate total price: wall size * rate from seed data / config
+    // Price: wall size * rate per sq ft (₹150 from seedData)
     const price = sizeNum * RATE_PER_SQFT;
 
     const booking = new Booking({
@@ -304,7 +317,6 @@ app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res
       booking,
     });
   } catch (err) {
-    // Catch MongoDB duplicate key error from partial unique index
     if (err.code === 11000) {
       return res.status(409).json({
         error: 'This date has already been booked. Please pick another date.',
@@ -314,10 +326,11 @@ app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res
   }
 });
 
-// 2. GET /api/bookings (List bookings: Customer sees only what they own; Admin sees all)
+// 2. GET /api/bookings (List bookings: Customer sees only what they own; Studio sees all)
 app.get('/api/bookings', authenticate, async (req, res) => {
   try {
-    const query = req.user.role === 'admin' ? {} : { customerId: req.user._id };
+    const isStudio = req.user.role === 'admin' || req.user.role === 'studio';
+    const query = isStudio ? {} : { customerId: req.user._id };
     const bookings = await Booking.find(query)
       .populate('customerId', 'email role')
       .sort({ date: 1 });
@@ -342,7 +355,6 @@ app.get('/api/bookings/:id', authenticate, async (req, res) => {
       return res.status(404).json({ error: 'Booking not found.' });
     }
 
-    // Spec Requirement: If a customer tries to query another customer's record, return 404
     if (!enforceOwnership(booking.customerId._id || booking.customerId, req.user)) {
       return res.status(404).json({ error: 'Booking not found.' });
     }
@@ -353,8 +365,8 @@ app.get('/api/bookings/:id', authenticate, async (req, res) => {
   }
 });
 
-// 4. PATCH /api/bookings/:id/status (Confirm or decline booking - Admin only)
-app.patch('/api/bookings/:id/status', authenticate, requireRole('admin'), async (req, res) => {
+// 4. PATCH /api/bookings/:id/status (Confirm or decline booking - Studio/Admin only)
+app.patch('/api/bookings/:id/status', authenticate, requireRole('admin', 'studio'), async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
@@ -399,7 +411,6 @@ app.patch('/api/bookings/:id/cancel', authenticate, requireRole('customer'), asy
       return res.status(404).json({ error: 'Booking not found.' });
     }
 
-    // Spec Requirement: Customer querying or modifying another customer's record gets 404
     if (!enforceOwnership(booking.customerId, req.user)) {
       return res.status(404).json({ error: 'Booking not found.' });
     }
@@ -411,8 +422,6 @@ app.patch('/api/bookings/:id/cancel', authenticate, requireRole('customer'), asy
       return res.status(400).json({ error: 'Cannot cancel a booking that was already declined.' });
     }
 
-    // 3-day cancellation window check:
-    // "A customer can cancel until 3 days before the date."
     const todayUtc = normalizeDate(new Date());
     const bookingDateUtc = normalizeDate(booking.date);
     const diffDays = Math.round((bookingDateUtc.getTime() - todayUtc.getTime()) / (1000 * 60 * 60 * 24));
@@ -435,9 +444,7 @@ app.patch('/api/bookings/:id/cancel', authenticate, requireRole('customer'), asy
   }
 });
 
-// ============================================================================
 // Fallback 404 Route for Unmatched API Endpoints
-// ============================================================================
 app.all('/api/*', (req, res) => {
   res.status(404).json({ error: `API route ${req.method} ${req.path} not found.` });
 });
@@ -454,16 +461,16 @@ async function startServer() {
   try {
     await connectDB();
     await seedDefaults();
-    app.listen(PORT, () => {
-      console.log(`[Art Studio Server] Running on http://localhost:${PORT}`);
+    const serverInstance = app.listen(PORT, () => {
+      console.log(`[Trail Studio Server] Running on http://localhost:${PORT}`);
     });
+    return serverInstance;
   } catch (err) {
     console.error('Fatal startup error:', err);
     process.exit(1);
   }
 }
 
-// Start if not in testing environment
 if (require.main === module) {
   startServer();
 }

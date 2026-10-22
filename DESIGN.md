@@ -1,11 +1,11 @@
-# System Design Document (DESIGN.md)
+# System Design Document (DESIGN.md) · Trail Studio
 
 ### 1. How do login and the two roles work?
 Authentication is handled through a clean, header-based middleware protocol (`x-user-email`, `x-user-id`, or `Authorization: Bearer <token/email>`). On every protected request, the server-side `authenticate` middleware extracts the identity, verifies the user against the database, and attaches `req.user` to the request context. 
 
 Two roles are enforced via `requireRole(...)`:
-- **`customer`**: Can browse paintings, purchase available one-of-a-kind paintings, book wall dates (7–90 days out, 10–500 sq ft), view their own orders/bookings, cancel bookings (until 3 days prior), and cancel orders (which makes the painting available again). Customers cannot add paintings or confirm/decline bookings (returning `403 Forbidden`).
-- **`admin`** (Studio): Can browse paintings, add new paintings, view all customer bookings and orders across the studio, and confirm or decline wall bookings. Admins cannot purchase paintings, book walls, or cancel customer records (returning `403 Forbidden`).
+- **`customer`**: Can browse paintings, purchase available one-of-a-kind folk paintings, book wall mural dates (7–90 days out, 10–500 sq ft), view their own orders/bookings, cancel bookings (until 3 days prior), and cancel orders (which restores the artwork's availability). Customers cannot add paintings or confirm/decline bookings (returning `403 Forbidden`).
+- **`studio` / `admin`**: Initialized with the seed account (`studio@artstudio.in`). The studio can browse paintings, add new folk art pieces, view all customer bookings and orders across the studio, and confirm or decline wall mural requests. Studio accounts cannot purchase paintings, book walls, or cancel customer records (returning `403 Forbidden`).
 
 **Privacy & Ownership Enforcement**:
 In accordance with the specification, if a customer attempts to view, query, or modify another customer's record (`GET /api/bookings/:id`, order cancellation, or booking cancellation), the server strictly responds with **`404 Not Found`** rather than `403 Forbidden`. This prevents customer enumeration and protects sensitive booking information.
@@ -56,18 +56,18 @@ Each calendar date can only be booked once for active reservations:
 ### 4. What did you finish, what did you leave out, and what would you do next?
 
 #### What was finished:
-- **Database Layer**: Models for Users, Paintings, Orders, and Bookings with validations, indexing, and seed utility.
-- **Paintings Lifecycle**: Full browsing, admin addition, atomic customer purchase, and order cancellation that restores the painting's availability in the catalog.
-- **Wall Bookings Lifecycle**: Date constraints (7–90 days away), size validation (10–500 sq ft), automated pricing calculation (`size × rate`), double-booking prevention, admin status updates (confirm/decline), and customer cancellation with the 3-day lead time rule.
+- **Seed Dataset Integration**: Official dataset strictly imported from `seed.json` with 12 Indian folk paintings (Madhubani, Warli, Tanjore, Pattachitra, Kalamkari, Gond, Cheriyal, Pichwai, Rajasthani miniature, etc.), artwork images, artist credits, prices in INR (₹), and mural rate of ₹150/sq ft.
+- **Paintings Lifecycle**: Full browsing with responsive image gallery, studio additions, atomic customer purchase, and order cancellation that restores the painting's availability in the catalog.
+- **Wall Bookings Lifecycle**: Date constraints (7–90 days away), size validation (10–500 sq ft), automated pricing calculation (`size × ₹150/sq ft`), double-booking prevention, studio status updates (confirm/decline), and customer cancellation with the 3-day lead time rule.
 - **RBAC & Security**: Complete middleware handling `401 Unauthorized`, `403 Forbidden`, and `404 Not Found` for customer privacy isolation.
 - **Handmade Frontend**: Minimal, responsive HTML/JS UI with distinct Loading, Empty, Error/Refusal, and Success states for every view, complete with a 1-click role switcher for easy evaluation.
 - **Automated Test Suite**: Comprehensive integration script (`test_api.js`) verifying all status codes, RBAC rules, date calculations, and concurrency safeguards.
 
 #### What was left out:
-- **Custom Pottery Requests**: Custom pottery requests (item/glaze selection, 14-day lead time) were omitted to focus on ensuring that the paintings catalog, concurrency guarantees, and wall booking workflows are completely robust, reliable, and bug-free (adhering to the brief's guideline: *"A small app that works beats a large one that breaks"*).
+- **Custom Pottery Requests**: Custom pottery requests (item/glaze selection, 14-day lead time) were omitted to focus on ensuring that the painting catalog, concurrency guarantees, and wall booking workflows are completely robust, reliable, and bug-free (adhering to the brief's guideline: *"A small app that works beats a large one that breaks"*).
 - **Out of Scope Features**: Real payment gateways, password reset/email verification, image file uploads, and CI/CD pipelines were intentionally omitted per Section 06 ("What you do not need to build") of the brief.
 
 #### What would be done next:
 - **Pottery Module**: Implement the pottery request endpoints, glaze selection schemas, and 14-day lead time validation.
 - **Real-Time Calendar**: Add WebSockets (Socket.io) or Server-Sent Events (SSE) so dates and paintings reflect sold/booked states instantly across open browser sessions without requiring a manual refresh.
-- **Automated Notifications**: Connect an email/SMS provider (e.g., SendGrid/Twilio) to notify customers when their wall booking is confirmed or declined by the studio.
+- **Automated Notifications**: Connect an email/SMS provider to notify customers when their wall booking is confirmed or declined by the studio.

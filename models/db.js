@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
 
 // ============================================================================
 // 1. Schemas & Models
 // ============================================================================
 
 // User Schema
-// Roles supported: 'customer' and 'admin'
+// Roles supported: 'customer', 'admin', and 'studio' (admin & studio are synonyms)
 const userSchema = new mongoose.Schema(
   {
     email: {
@@ -18,8 +20,12 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       required: true,
-      enum: ['customer', 'admin'],
+      enum: ['customer', 'admin', 'studio'],
       default: 'customer',
+    },
+    password: {
+      type: String,
+      default: '',
     },
   },
   { timestamps: true }
@@ -29,10 +35,20 @@ const userSchema = new mongoose.Schema(
 // Paintings are one-of-a-kind. When bought, isAvailable becomes false.
 const paintingSchema = new mongoose.Schema(
   {
+    code: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     title: {
       type: String,
       required: true,
       trim: true,
+    },
+    artist: {
+      type: String,
+      trim: true,
+      default: 'Trail Studio Artist',
     },
     price: {
       type: Number,
@@ -44,6 +60,11 @@ const paintingSchema = new mongoose.Schema(
       default: true,
     },
     description: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    imageUrl: {
       type: String,
       trim: true,
       default: '',
@@ -132,7 +153,7 @@ const Booking = mongoose.model('Booking', bookingSchema);
 // 2. Database Connection Helper
 // ============================================================================
 async function connectDB(mongoUri) {
-  const uri = mongoUri || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/art_studio';
+  const uri = mongoUri || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/trail_studio';
   try {
     await mongoose.connect(uri);
     console.log(`[Database] Connected to MongoDB at ${uri}`);
@@ -148,62 +169,58 @@ async function connectDB(mongoUri) {
 function normalizeDate(input) {
   const d = new Date(input);
   if (isNaN(d.getTime())) return null;
-  // Strip time component to avoid timezone skew when booking a calendar day
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 }
 
 // ============================================================================
-// 4. Default Seed Data Helper
+// 4. Default Seed Data Helper (Uses seed.json strictly)
 // ============================================================================
 async function seedDefaults() {
   try {
+    const seedPath = path.join(__dirname, '..', 'seed.json');
+    let seedData = null;
+
+    if (fs.existsSync(seedPath)) {
+      const raw = fs.readFileSync(seedPath, 'utf-8');
+      seedData = JSON.parse(raw);
+    }
+
+    // Seed studio user and sample customers
     const userCount = await User.countDocuments();
     if (userCount === 0) {
-      console.log('[Seed] Seeding initial users...');
+      console.log('[Seed] Seeding initial users from seedData...');
+      const studioEmail = (seedData && seedData.studioAccount && seedData.studioAccount.email) 
+        ? seedData.studioAccount.email.toLowerCase() 
+        : 'studio@artstudio.in';
+      const studioPass = (seedData && seedData.studioAccount && seedData.studioAccount.password) 
+        ? seedData.studioAccount.password 
+        : 'Studio@123';
+
       await User.create([
-        { email: 'admin@artstudio.com', role: 'admin' },
+        { email: studioEmail, role: 'studio', password: studioPass },
+        { email: 'admin@trail.studio', role: 'admin' },
         { email: 'alice@example.com', role: 'customer' },
         { email: 'bob@example.com', role: 'customer' },
       ]);
       console.log('[Seed] Users seeded successfully.');
     }
 
+    // Seed paintings from seed.json
     const paintingCount = await Painting.countDocuments();
-    if (paintingCount === 0) {
-      console.log('[Seed] Seeding sample paintings...');
-      await Painting.create([
-        {
-          title: 'Sunset over Kyoto',
-          price: 350,
-          description: 'Original acrylic on canvas with textured gold leaf accents.',
-          isAvailable: true,
-        },
-        {
-          title: 'Morning Mist in the Valley',
-          price: 480,
-          description: 'Ethereal watercolor landscape capturing dawn on rough linen paper.',
-          isAvailable: true,
-        },
-        {
-          title: 'Abstract Geometry #4',
-          price: 275,
-          description: 'Minimalist study of form, shadow, and earthy pigments.',
-          isAvailable: true,
-        },
-        {
-          title: 'Ceramic Whisper',
-          price: 520,
-          description: 'Mixed media composition featuring layered clay wash and charcoal.',
-          isAvailable: true,
-        },
-        {
-          title: 'Night Sky Whispers',
-          price: 610,
-          description: 'Deep indigo oil painting with fine silver constellations.',
-          isAvailable: true,
-        },
-      ]);
-      console.log('[Seed] Paintings seeded successfully.');
+    if (paintingCount === 0 && seedData && Array.isArray(seedData.paintings)) {
+      console.log('[Seed] Seeding paintings strictly from seed.json...');
+      const paintingDocs = seedData.paintings.map((p) => ({
+        code: p.id,
+        title: p.title,
+        artist: p.artist || 'Trail Studio Artist',
+        description: p.description || '',
+        price: p.price,
+        imageUrl: p.imageUrl ? '/' + p.imageUrl.replace(/^\//, '') : '',
+        isAvailable: p.status === 'available',
+      }));
+
+      await Painting.insertMany(paintingDocs);
+      console.log(`[Seed] Seeded ${paintingDocs.length} paintings from seed.json.`);
     }
   } catch (err) {
     console.error('[Seed] Error seeding default data:', err.message);
@@ -214,8 +231,10 @@ async function seedDefaults() {
 if (require.main === module && process.argv.includes('--seed')) {
   require('dotenv').config();
   connectDB().then(async () => {
+    // Clear and reload
+    await Painting.deleteMany({});
     await seedDefaults();
-    console.log('[Seed] Done.');
+    console.log('[Seed] Re-seeded paintings from seed.json.');
     process.exit(0);
   });
 }

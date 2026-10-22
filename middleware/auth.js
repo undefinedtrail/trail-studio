@@ -24,12 +24,11 @@ async function authenticate(req, res, next) {
 
     if (!identifier) {
       return res.status(401).json({
-        error: 'Unauthorized: Authentication required. Provide x-user-email or x-user-id header.',
+        error: 'Unauthorized: Authentication required. Provide x-user-email or Authorization header.',
       });
     }
 
     let user = null;
-    // Check if identifier is an ObjectId or an email string
     if (mongoose.Types.ObjectId.isValid(identifier)) {
       user = await User.findById(identifier);
     }
@@ -55,13 +54,21 @@ async function authenticate(req, res, next) {
 // Role-Based Access Control (RBAC) Middleware
 // ============================================================================
 // Restricts endpoint access to specific roles. Returns 403 Forbidden on mismatch.
+// Note: 'admin' and 'studio' are treated as synonymous for studio management.
 function requireRole(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized: Please log in first.' });
     }
 
-    const roles = Array.isArray(allowedRoles[0]) ? allowedRoles[0] : allowedRoles;
+    let roles = Array.isArray(allowedRoles[0]) ? allowedRoles[0] : allowedRoles;
+    // Normalize admin and studio synonymity
+    if (roles.includes('admin') && !roles.includes('studio')) {
+      roles.push('studio');
+    }
+    if (roles.includes('studio') && !roles.includes('admin')) {
+      roles.push('admin');
+    }
 
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
@@ -79,8 +86,8 @@ function requireRole(...allowedRoles) {
 // Specification Rule: If a customer tries to query, view, or modify another customer's
 // record/booking, return 404 Not Found (not 403) to prevent customer enumeration.
 function enforceOwnership(documentCustomerId, currentUser) {
-  if (currentUser.role === 'admin') {
-    return true; // Admin has read access across records
+  if (currentUser.role === 'admin' || currentUser.role === 'studio') {
+    return true; // Studio has view access across all records
   }
 
   const docIdStr = documentCustomerId ? documentCustomerId.toString() : '';

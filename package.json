@@ -1,7 +1,7 @@
 {
-  "name": "art-studio-app",
+  "name": "trail-studio",
   "version": "1.0.0",
-  "description": "Full-stack Art Studio Web Application with RBAC, concurrency handling, and wall bookings",
+  "description": "Trail Studio - Handcrafted Folk Art & Wall Murals with Strict RBAC and Concurrency Control",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,6 +10,7 @@
     "test": "node test_api.js"
   },
   "keywords": [
+    "trail-studio",
     "art-studio",
     "express",
     "mongoose",
