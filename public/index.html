@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Art Studio · Atelier & Workshop</title>
+  <style>
+    /* ==========================================================================
+       Handmade, Minimal & Functional Studio Stylesheet
+       No flashy animations or frameworks - clean artisan paper aesthetic
+       ========================================================================== */
+    :root {
+      --bg: #fbf9f5;
+      --card-bg: #ffffff;
+      --text: #2b2927;
+      --text-muted: #6e6b66;
+      --border: #dfd9cf;
+      --accent: #9c4126; /* Terracotta / Studio Red */
+      --accent-hover: #7e331d;
+      --highlight: #2f5661; /* Muted Slate */
+      --tag-bg: #f2eee8;
+      --success-bg: #edf6ee;
+      --success-border: #a4d2a6;
+      --success-text: #205c24;
+      --error-bg: #fdf0ed;
+      --error-border: #f0b5a8;
+      --error-text: #96281b;
+      --warn-bg: #fff9e6;
+      --warn-border: #f3df9b;
+      --warn-text: #7d5a00;
+      --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-serif: Georgia, "Times New Roman", serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      line-height: 1.5;
+      padding: 24px 16px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    /* Header & Branding */
+    header {
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 18px;
+      margin-bottom: 24px;
+    }
+
+    .studio-brand {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-weight: 600;
+      font-size: 1.85rem;
+      letter-spacing: -0.02em;
+      color: #1a1918;
+    }
+
+    .studio-subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Role & Session Switcher Bar */
+    .session-bar {
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 12px 14px;
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .session-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .role-badge.customer {
+      background: #e1ecf4;
+      color: #2c5777;
+      border: 1px solid #bed3e5;
+    }
+
+    .role-badge.admin {
+      background: #fae4df;
+      color: #8c321d;
+      border: 1px solid #ecc3b9;
+    }
+
+    .quick-users {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .quick-users span {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+
+    button, .btn {
+      font-family: inherit;
+      font-size: 0.88rem;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    button:hover:not(:disabled) {
+      background: #f0ece5;
+      border-color: #b5ada2;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+    }
+
+    .btn-sm {
+      padding: 3px 8px;
+      font-size: 0.8rem;
+    }
+
+    .btn-danger {
+      background: #ffffff;
+      color: var(--error-text);
+      border-color: #e5b0a6;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: #fbebe8;
+      border-color: var(--error-text);
+    }
+
+    /* Navigation Tabs */
+    nav.nav-tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .tab-btn {
+      border: none;
+      background: transparent;
+      padding: 10px 16px;
+      font-size: 0.95rem;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      border-radius: 0;
+    }
+
+    .tab-btn:hover {
+      background: transparent;
+      color: var(--text);
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom: 2px solid var(--accent);
+      font-weight: 600;
+    }
+
+    /* Section Views */
+    .view-panel {
+      display: none;
+    }
+
+    .view-panel.active {
+      display: block;
+    }
+
+    .section-header {
+      margin-bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .section-header h2 {
+      font-family: var(--font-serif);
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+    /* Status Messages: Loading, Empty, Error, Success */
+    .status-box {
+      padding: 12px 14px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+    }
+
+    .status-box.loading {
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      color: var(--warn-text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-box.empty {
+      background: #f7f6f2;
+      border: 1px dashed var(--border);
+      color: var(--text-muted);
+      text-align: center;
+      padding: 24px 16px;
+    }
+
+    .status-box.error {
+      background: var(--error-bg);
+      border: 1px solid var(--error-border);
+      color: var(--error-text);
+    }
+
+    .status-box.success {
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: var(--success-text);
+    }
+
+    /* Painting Grid */
+    .painting-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card h3 {
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      margin-bottom: 6px;
+      color: #1a1918;
+    }
+
+    .card p.desc {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-bottom: 14px;
+      flex-grow: 1;
+    }
+
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #f0ede6;
+      padding-top: 12px;
+      margin-top: 8px;
+    }
+
+    .price {
+      font-family: var(--font-serif);
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #1a1918;
+    }
+
+    .sold-badge {
+      background: #eeebe6;
+      color: #79746e;
+      font-size: 0.78rem;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Forms */
+    form.studio-form {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 20px;
+      margin-bottom: 24px;
+      max-width: 540px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.86rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #3b3835;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      background: #ffffff;
+      color: var(--text);
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .help-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* Tables */
+    .data-table-wrapper {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow-x: auto;
+      margin-bottom: 24px;
+    }
+
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    table.data-table th,
+    table.data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #ede8e1;
+    }
+
+    table.data-table th {
+      background: var(--tag-bg);
+      font-weight: 600;
+      color: #3b3835;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    table.data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Status Badges */
+    .status-tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-tag.requested { background: #fff4d6; color: #7f5c00; border: 1px solid #f0dc9e; }
+    .status-tag.confirmed { background: #e5f6e8; color: #1c6b29; border: 1px solid #b3e6ba; }
+    .status-tag.declined  { background: #fbe8e6; color: #8e2b20; border: 1px solid #f1c1bc; }
+    .status-tag.cancelled { background: #eeebe6; color: #6b6762; border: 1px solid #d9d4cc; }
+    .status-tag.placed    { background: #e2f0fb; color: #1b5380; border: 1px solid #b9daf2; }
+
+    /* Footer */
+    footer {
+      margin-top: 48px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="studio-brand">
+        <div>
+          <h1>Atelier 19 · Art Studio</h1>
+          <div class="studio-subtitle">Original Paintings, Wall Painting Commissions & Ceramic Works</div>
+        </div>
+      </div>
+
+      <!-- User Session & Quick Switcher -->
+      <div class="session-bar">
+        <div class="session-info">
+          <span>Logged in:</span>
+          <strong id="sessionEmail">alice@example.com</strong>
+          <span class="role-badge customer" id="sessionRole">customer</span>
+        </div>
+        <div class="quick-users">
+          <span>Quick Switch:</span>
+          <button class="btn btn-sm" onclick="switchUser('alice@example.com', 'customer')">Alice (Customer)</button>
+          <button class="btn btn-sm" onclick="switchUser('bob@example.com', 'customer')">Bob (Customer)</button>
+          <button class="btn btn-sm" onclick="switchUser('admin@artstudio.com', 'admin')">Studio Admin</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" onclick="showTab('paintings')">Browse Paintings</button>
+      <button class="tab-btn" id="tabWallBtn" onclick="showTab('wall')">Book a Wall</button>
+      <button class="tab-btn" id="tabMyRecordsBtn" onclick="showTab('records')">My Bookings & Orders</button>
+      <button class="tab-btn" id="tabAdminBtn" style="display:none;" onclick="showTab('admin')">Studio Admin Dashboard</button>
+    </nav>
+
+    <!-- Global Action Notification Box -->
+    <div id="globalNotification"></div>
+
+    <!-- ======================================================================
+         VIEW 1: Browse Paintings (Customer & Admin)
+         ====================================================================== -->
+    <section id="viewPaintings" class="view-panel active">
+      <div class="section-header">
+        <div>
+          <h2>Available Paintings</h2>
+          <p class="help-text">Every piece is handcrafted and one of a kind. Each painting can only be purchased once.</p>
+        </div>
+        <button class="btn" onclick="loadPaintings()">↻ Refresh Gallery</button>
+      </div>
+
+      <!-- State containers: Loading, Empty, Error -->
+      <div id="paintingsLoading" class="status-box loading" style="display:none;">
+        <span>⏳ Loading paintings from the studio archive...</span>
+      </div>
+      <div id="paintingsError" class="status-box error" style="display:none;"></div>
+      <div id="paintingsEmpty" class="status-box empty" style="display:none;">
+        <p>No paintings are currently listed in the studio.</p>
+      </div>
+
+      <!-- Paintings Grid -->
+      <div id="paintingsGrid" class="painting-grid"></div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 2: Wall Commission Booking (Customer)
+         ====================================================================== -->
+    <section id="viewWall" class="view-panel">
+      <div class="section-header">
+        <div>
+          <h2>Book a Wall Painting</h2>
+          <p class="help-text">Commission a custom mural painted on your wall. Each calendar date can only be booked once.</p>
+        </div>
+      </div>
+
+      <div id="wallActionMessage"></div>
+
+      <form class="studio-form" id="wallBookingForm" onsubmit="handleWallBooking(event)">
+        <div class="form-group">
+          <label for="bookingDate">Preferred Date (7 to 90 days away)</label>
+          <input type="date" id="bookingDate" required onchange="validateBookingDateInput()">
+          <div class="help-text" id="dateHelperText">Pick a date between 7 and 90 days from today.</div>
+        </div>
+
+        <div class="form-group">
+          <label for="wallSize">Wall Size (sq ft: 10 to 500)</label>
+          <input type="number" id="wallSize" min="10" max="500" placeholder="e.g. 120" required oninput="updatePriceEstimate()">
+          <div class="help-text" id="priceEstimateText">Rate: $20 / sq ft. Estimated cost: $0</div>
+        </div>
+
+        <div class="form-group">
+          <label for="wallAddress">Physical Wall Location / Address</label>
+          <textarea id="wallAddress" rows="3" placeholder="Street, Apartment or Suite, City, Postal Code" required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btnSubmitBooking">Request Wall Booking</button>
+      </form>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 3: My Orders & Bookings (Customer View)
+         ====================================================================== -->
+    <section id="viewRecords" class="view-panel">
+      <div class="section-header">
+        <div>
+          <h2>My Orders & Wall Bookings</h2>
+          <p class="help-text">Track your art purchases and mural requests. You can cancel mural bookings up to 3 days in advance.</p>
+        </div>
+        <button class="btn" onclick="loadMyRecords()">↻ Refresh My Records</button>
+      </div>
+
+      <div id="recordsActionMessage"></div>
+
+      <!-- Bookings Sub-section -->
+      <h3 style="font-family: var(--font-serif); margin-bottom: 8px;">My Wall Bookings</h3>
+      <div id="myBookingsLoading" class="status-box loading" style="display:none;">
+        <span>⏳ Loading your wall bookings...</span>
+      </div>
+      <div id="myBookingsError" class="status-box error" style="display:none;"></div>
+      <div id="myBookingsEmpty" class="status-box empty" style="display:none;">
+        <p>You have no wall bookings yet. <a href="javascript:void(0)" onclick="showTab('wall')">Book a wall painting</a></p>
+      </div>
+      <div class="data-table-wrapper" id="myBookingsTableWrapper" style="display:none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Wall Size</th>
+              <th>Address</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="myBookingsTbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Orders Sub-section -->
+      <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">My Painting Orders</h3>
+      <div id="myOrdersLoading" class="status-box loading" style="display:none;">
+        <span>⏳ Loading your orders...</span>
+      </div>
+      <div id="myOrdersError" class="status-box error" style="display:none;"></div>
+      <div id="myOrdersEmpty" class="status-box empty" style="display:none;">
+        <p>You haven't bought any paintings yet. <a href="javascript:void(0)" onclick="showTab('paintings')">Browse available paintings</a></p>
+      </div>
+      <div class="data-table-wrapper" id="myOrdersTableWrapper" style="display:none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Painting</th>
+              <th>Price</th>
+              <th>Order Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="myOrdersTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         VIEW 4: Studio Admin Dashboard (Admin Only)
+         ====================================================================== -->
+    <section id="viewAdmin" class="view-panel">
+      <div class="section-header">
+        <div>
+          <h2>Studio Admin Dashboard</h2>
+          <p class="help-text">Review and confirm customer wall bookings, monitor orders, and register new paintings into the studio catalog.</p>
+        </div>
+        <button class="btn" onclick="loadAdminData()">↻ Refresh Studio Dashboard</button>
+      </div>
+
+      <div id="adminActionMessage"></div>
+
+      <!-- Admin: Add New Painting Form -->
+      <h3 style="font-family: var(--font-serif); margin-bottom: 8px;">Add New Painting to Catalog</h3>
+      <form class="studio-form" id="adminAddPaintingForm" onsubmit="handleAddPainting(event)">
+        <div class="form-group">
+          <label for="newPaintingTitle">Title of Artwork</label>
+          <input type="text" id="newPaintingTitle" placeholder="e.g. Midnight Solitude in Ochre" required>
+        </div>
+        <div class="form-group">
+          <label for="newPaintingPrice">Price ($ USD)</label>
+          <input type="number" id="newPaintingPrice" min="1" placeholder="380" required>
+        </div>
+        <div class="form-group">
+          <label for="newPaintingDesc">Description / Medium</label>
+          <textarea id="newPaintingDesc" rows="2" placeholder="e.g. Oil on stretched Belgian linen with natural earth pigments."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btnAddPainting">Add to Studio Gallery</button>
+      </form>
+
+      <!-- Admin: All Wall Bookings Table -->
+      <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">All Customer Wall Bookings</h3>
+      <div id="adminBookingsLoading" class="status-box loading" style="display:none;">
+        <span>⏳ Loading all studio bookings...</span>
+      </div>
+      <div id="adminBookingsError" class="status-box error" style="display:none;"></div>
+      <div id="adminBookingsEmpty" class="status-box empty" style="display:none;">
+        <p>No customer bookings recorded in the system.</p>
+      </div>
+      <div class="data-table-wrapper" id="adminBookingsTableWrapper" style="display:none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Size</th>
+              <th>Address</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Studio Decision</th>
+            </tr>
+          </thead>
+          <tbody id="adminBookingsTbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Admin: All Orders Table -->
+      <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">All Painting Orders</h3>
+      <div id="adminOrdersLoading" class="status-box loading" style="display:none;">
+        <span>⏳ Loading all studio orders...</span>
+      </div>
+      <div id="adminOrdersError" class="status-box error" style="display:none;"></div>
+      <div id="adminOrdersEmpty" class="status-box empty" style="display:none;">
+        <p>No painting orders recorded yet.</p>
+      </div>
+      <div class="data-table-wrapper" id="adminOrdersTableWrapper" style="display:none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Painting</th>
+              <th>Customer</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Date Placed</th>
+            </tr>
+          </thead>
+          <tbody id="adminOrdersTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <span>Atelier 19 Art Studio · Handcrafted Web Application</span>
+      <span>Express + MongoDB + RBAC Architecture</span>
+    </footer>
+  </div>
+
+  <!-- ========================================================================
+       Vanilla JavaScript Client Logic
+       Fully self-contained, no external libraries, clear state handling
+       ======================================================================== -->
+  <script>
+    // State management
+    let currentUser = {
+      email: 'alice@example.com',
+      role: 'customer'
+    };
+
+    let ratePerSqFt = 20;
+
+    // Initialize application
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Restore user if saved in localStorage
+      const savedEmail = localStorage.getItem('art_studio_email');
+      const savedRole = localStorage.getItem('art_studio_role');
+      if (savedEmail && savedRole) {
+        currentUser.email = savedEmail;
+        currentUser.role = savedRole;
+      }
+
+      await fetchConfig();
+      setupDateRangeConstraints();
+      updateSessionUI();
+      loadPaintings();
+    });
+
+    // Fetch studio rate configuration
+    async function fetchConfig() {
+      try {
+        const res = await fetch('/api/config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.ratePerSqFt) ratePerSqFt = data.ratePerSqFt;
+        }
+      } catch (e) {
+        console.warn('Could not fetch studio config, using default rate $20/sq ft');
+      }
+    }
+
+    // Helper: Build standard auth headers for all API requests
+    function getAuthHeaders() {
+      return {
+        'Content-Type': 'application/json',
+        'x-user-email': currentUser.email
+      };
+    }
+
+    // Update Session UI
+    function updateSessionUI() {
+      document.getElementById('sessionEmail').textContent = currentUser.email;
+      const roleBadge = document.getElementById('sessionRole');
+      roleBadge.textContent = currentUser.role;
+      roleBadge.className = 'role-badge ' + currentUser.role;
+
+      const tabAdminBtn = document.getElementById('tabAdminBtn');
+      const tabWallBtn = document.getElementById('tabWallBtn');
+      const tabMyRecordsBtn = document.getElementById('tabMyRecordsBtn');
+
+      if (currentUser.role === 'admin') {
+        tabAdminBtn.style.display = 'inline-block';
+        tabWallBtn.style.display = 'none';
+        tabMyRecordsBtn.style.display = 'none';
+        // If current active tab is customer-only, switch to admin or paintings
+        const currentActive = document.querySelector('.tab-btn.active');
+        if (currentActive && (currentActive.id === 'tabWallBtn' || currentActive.id === 'tabMyRecordsBtn')) {
+          showTab('admin');
+        }
+      } else {
+        tabAdminBtn.style.display = 'none';
+        tabWallBtn.style.display = 'inline-block';
+        tabMyRecordsBtn.style.display = 'inline-block';
+        const currentActive = document.querySelector('.tab-btn.active');
+        if (currentActive && currentActive.id === 'tabAdminBtn') {
+          showTab('paintings');
+        }
+      }
+    }
+
+    // Switch active user
+    async function switchUser(email, role) {
+      try {
+        // Call login endpoint to ensure user exists
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, role })
+        });
+        const data = await res.json();
+        if (res.ok && data.user) {
+          currentUser.email = data.user.email;
+          currentUser.role = data.user.role;
+          localStorage.setItem('art_studio_email', currentUser.email);
+          localStorage.setItem('art_studio_role', currentUser.role);
+          updateSessionUI();
+          showNotification(`Switched user to ${currentUser.email} (${currentUser.role})`, 'success');
+
+          // Refresh current tab data
+          const activePanel = document.querySelector('.view-panel.active');
+          if (activePanel) {
+            if (activePanel.id === 'viewPaintings') loadPaintings();
+            if (activePanel.id === 'viewRecords') loadMyRecords();
+            if (activePanel.id === 'viewAdmin') loadAdminData();
+          }
+        }
+      } catch (e) {
+        showNotification('Failed to switch user: ' + e.message, 'error');
+      }
+    }
+
+    // Tab Navigation
+    function showTab(tabName) {
+      const tabs = document.querySelectorAll('.tab-btn');
+      tabs.forEach(t => t.classList.remove('active'));
+
+      const panels = document.querySelectorAll('.view-panel');
+      panels.forEach(p => p.classList.remove('active'));
+
+      if (tabName === 'paintings') {
+        tabs[0].classList.add('active');
+        document.getElementById('viewPaintings').classList.add('active');
+        loadPaintings();
+      } else if (tabName === 'wall') {
+        document.getElementById('tabWallBtn').classList.add('active');
+        document.getElementById('viewWall').classList.add('active');
+      } else if (tabName === 'records') {
+        document.getElementById('tabMyRecordsBtn').classList.add('active');
+        document.getElementById('viewRecords').classList.add('active');
+        loadMyRecords();
+      } else if (tabName === 'admin') {
+        document.getElementById('tabAdminBtn').classList.add('active');
+        document.getElementById('viewAdmin').classList.add('active');
+        loadAdminData();
+      }
+    }
+
+    // Notification banner
+    function showNotification(msg, type = 'info', containerId = 'globalNotification') {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = `<div class="status-box ${type}">${msg}</div>`;
+      setTimeout(() => {
+        if (container.innerHTML.includes(msg)) {
+          container.innerHTML = '';
+        }
+      }, 7000);
+    }
+
+    // ========================================================================
+    // Paintings: Load, Render, Buy
+    // Explicit states: Loading, Empty, Error, Refusal
+    // ========================================================================
+    async function loadPaintings() {
+      const loading = document.getElementById('paintingsLoading');
+      const empty = document.getElementById('paintingsEmpty');
+      const error = document.getElementById('paintingsError');
+      const grid = document.getElementById('paintingsGrid');
+
+      loading.style.display = 'block';
+      empty.style.display = 'none';
+      error.style.display = 'none';
+      grid.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/paintings', {
+          headers: getAuthHeaders()
+        });
+
+        const data = await res.json();
+        loading.style.display = 'none';
+
+        if (!res.ok) {
+          error.textContent = data.error || 'Failed to load paintings.';
+          error.style.display = 'block';
+          return;
+        }
+
+        if (!Array.isArray(data) || data.length === 0) {
+          empty.style.display = 'block';
+          return;
+        }
+
+        grid.innerHTML = data.map(painting => {
+          const isCustomer = currentUser.role === 'customer';
+          const buyButton = painting.isAvailable
+            ? (isCustomer
+                ? `<button class="btn btn-primary btn-sm" onclick="buyPainting('${painting._id}', '${escapeHtml(painting.title)}')">Buy Painting</button>`
+                : `<span class="help-text" style="color:var(--text-muted); font-size:0.75rem;">(Customer only)</span>`)
+            : `<span class="sold-badge">Sold Out</span>`;
+
+          return `
+            <div class="card">
+              <div>
+                <h3>${escapeHtml(painting.title)}</h3>
+                <p class="desc">${escapeHtml(painting.description || 'Original art studio piece.')}</p>
+              </div>
+              <div class="card-footer">
+                <span class="price">$${painting.price.toLocaleString()}</span>
+                <div>${buyButton}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        loading.style.display = 'none';
+        error.textContent = 'Network or server error while retrieving paintings: ' + err.message;
+        error.style.display = 'block';
+      }
+    }
+
+    // Buy painting with clear refusal and concurrency handling
+    async function buyPainting(id, title) {
+      if (!confirm(`Confirm purchase of "${title}"?`)) return;
+
+      try {
+        const res = await fetch(`/api/paintings/${id}/buy`, {
+          method: 'POST',
+          headers: getAuthHeaders()
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          showNotification(`✓ Success: You purchased "${title}"!`, 'success');
+          loadPaintings();
+        } else {
+          // Clear refusal message if already sold or wrong role
+          showNotification(`⚠️ Refusal: ${data.error || 'Could not complete purchase.'}`, 'error');
+          loadPaintings(); // Refresh gallery state
+        }
+      } catch (err) {
+        showNotification('Error processing purchase: ' + err.message, 'error');
+      }
+    }
+
+    // ========================================================================
+    // Wall Booking: Validation, Estimate, Submit
+    // ========================================================================
+    function setupDateRangeConstraints() {
+      const dateInput = document.getElementById('bookingDate');
+      const today = new Date();
+
+      const minDate = new Date(today);
+      minDate.setDate(minDate.getDate() + 7);
+
+      const maxDate = new Date(today);
+      maxDate.setDate(maxDate.getDate() + 90);
+
+      const minStr = minDate.toISOString().split('T')[0];
+      const maxStr = maxDate.toISOString().split('T')[0];
+
+      dateInput.min = minStr;
+      dateInput.max = maxStr;
+
+      document.getElementById('dateHelperText').textContent =
+        `Permitted booking window: ${minStr} to ${maxStr} (7 to 90 days away).`;
+    }
+
+    function validateBookingDateInput() {
+      const dateInput = document.getElementById('bookingDate');
+      if (!dateInput.value) return;
+
+      const selected = new Date(dateInput.value);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      selected.setHours(0,0,0,0);
+
+      const diffDays = Math.round((selected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays < 7 || diffDays > 90) {
+        dateInput.setCustomValidity(`Date must be between 7 and 90 days away (selected: ${diffDays} days).`);
+      } else {
+        dateInput.setCustomValidity('');
+      }
+    }
+
+    function updatePriceEstimate() {
+      const sizeInput = document.getElementById('wallSize');
+      const estimateText = document.getElementById('priceEstimateText');
+      const size = Number(sizeInput.value);
+
+      if (size >= 10 && size <= 500) {
+        const estimated = size * ratePerSqFt;
+        estimateText.textContent = `Rate: $${ratePerSqFt} / sq ft · Total: $${estimated.toLocaleString()}`;
+        estimateText.style.color = 'var(--text)';
+      } else {
+        estimateText.textContent = `Rate: $${ratePerSqFt} / sq ft · Please enter a size between 10 and 500 sq ft.`;
+        estimateText.style.color = 'var(--text-muted)';
+      }
+    }
+
+    async function handleWallBooking(e) {
+      e.preventDefault();
+      const msgBox = document.getElementById('wallActionMessage');
+      const btn = document.getElementById('btnSubmitBooking');
+
+      const date = document.getElementById('bookingDate').value;
+      const size = document.getElementById('wallSize').value;
+      const address = document.getElementById('wallAddress').value;
+
+      btn.disabled = true;
+      btn.textContent = 'Submitting Request...';
+      msgBox.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/bookings', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ date, size, address })
+        });
+
+        const data = await res.json();
+        btn.disabled = false;
+        btn.textContent = 'Request Wall Booking';
+
+        if (res.ok) {
+          msgBox.innerHTML = `
+            <div class="status-box success">
+              ✓ <strong>Booking Requested!</strong> Your wall painting on ${formatDate(data.booking.date)} 
+              (${data.booking.size} sq ft · $${data.booking.price.toLocaleString()}) has been sent to the studio for review.
+            </div>`;
+          document.getElementById('wallBookingForm').reset();
+          updatePriceEstimate();
+        } else {
+          // Clear refusal message (e.g. date already taken, invalid size/range)
+          msgBox.innerHTML = `
+            <div class="status-box error">
+              ⚠️ <strong>Booking Refused:</strong> ${data.error || 'Unable to book date.'}
+            </div>`;
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Request Wall Booking';
+        msgBox.innerHTML = `<div class="status-box error">Error submitting request: ${err.message}</div>`;
+      }
+    }
+
+    // ========================================================================
+    // Customer Records: Bookings & Orders
+    // ========================================================================
+    async function loadMyRecords() {
+      await Promise.all([loadMyBookings(), loadMyOrders()]);
+    }
+
+    async function loadMyBookings() {
+      const loading = document.getElementById('myBookingsLoading');
+      const error = document.getElementById('myBookingsError');
+      const empty = document.getElementById('myBookingsEmpty');
+      const wrapper = document.getElementById('myBookingsTableWrapper');
+      const tbody = document.getElementById('myBookingsTbody');
+
+      loading.style.display = 'block';
+      error.style.display = 'none';
+      empty.style.display = 'none';
+      wrapper.style.display = 'none';
+      tbody.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/bookings', { headers: getAuthHeaders() });
+        const data = await res.json();
+        loading.style.display = 'none';
+
+        if (!res.ok) {
+          error.textContent = data.error || 'Failed to load bookings.';
+          error.style.display = 'block';
+          return;
+        }
+
+        if (!Array.isArray(data) || data.length === 0) {
+          empty.style.display = 'block';
+          return;
+        }
+
+        wrapper.style.display = 'block';
+        tbody.innerHTML = data.map(b => {
+          const bookingDate = new Date(b.date);
+          const today = new Date();
+          const daysRemaining = Math.round((bookingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          const canCancel = (b.status === 'requested' || b.status === 'confirmed') && daysRemaining >= 3;
+
+          let actionContent = '-';
+          if (canCancel) {
+            actionContent = `<button class="btn btn-danger btn-sm" onclick="cancelBooking('${b._id}')">Cancel Booking</button>`;
+          } else if (b.status === 'requested' || b.status === 'confirmed') {
+            actionContent = `<span class="help-text">Within 3-day window</span>`;
+          }
+
+          return `
+            <tr>
+              <td><strong>${formatDate(b.date)}</strong></td>
+              <td>${b.size} sq ft</td>
+              <td>${escapeHtml(b.address)}</td>
+              <td>$${b.price.toLocaleString()}</td>
+              <td><span class="status-tag ${b.status}">${b.status}</span></td>
+              <td>${actionContent}</td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        loading.style.display = 'none';
+        error.textContent = 'Error loading bookings: ' + err.message;
+        error.style.display = 'block';
+      }
+    }
+
+    async function cancelBooking(id) {
+      if (!confirm('Are you sure you want to cancel this wall booking? The reserved date will be released.')) return;
+
+      try {
+        const res = await fetch(`/api/bookings/${id}/cancel`, {
+          method: 'PATCH',
+          headers: getAuthHeaders()
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          showNotification('✓ Booking successfully cancelled.', 'success', 'recordsActionMessage');
+          loadMyBookings();
+        } else {
+          showNotification(`⚠️ Cancellation Refused: ${data.error}`, 'error', 'recordsActionMessage');
+        }
+      } catch (err) {
+        showNotification('Error cancelling booking: ' + err.message, 'error', 'recordsActionMessage');
+      }
+    }
+
+    async function loadMyOrders() {
+      const loading = document.getElementById('myOrdersLoading');
+      const error = document.getElementById('myOrdersError');
+      const empty = document.getElementById('myOrdersEmpty');
+      const wrapper = document.getElementById('myOrdersTableWrapper');
+      const tbody = document.getElementById('myOrdersTbody');
+
+      loading.style.display = 'block';
+      error.style.display = 'none';
+      empty.style.display = 'none';
+      wrapper.style.display = 'none';
+      tbody.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/orders', { headers: getAuthHeaders() });
+        const data = await res.json();
+        loading.style.display = 'none';
+
+        if (!res.ok) {
+          error.textContent = data.error || 'Failed to load orders.';
+          error.style.display = 'block';
+          return;
+        }
+
+        if (!Array.isArray(data) || data.length === 0) {
+          empty.style.display = 'block';
+          return;
+        }
+
+        wrapper.style.display = 'block';
+        tbody.innerHTML = data.map(o => {
+          const paintingTitle = o.paintingId ? o.paintingId.title : 'Archived Artwork';
+          const price = o.paintingId ? o.paintingId.price : '-';
+          const canCancel = o.status === 'placed';
+
+          const actionBtn = canCancel
+            ? `<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o._id}')">Cancel Order</button>`
+            : '-';
+
+          return `
+            <tr>
+              <td><strong>${escapeHtml(paintingTitle)}</strong></td>
+              <td>$${typeof price === 'number' ? price.toLocaleString() : price}</td>
+              <td>${formatDate(o.createdAt)}</td>
+              <td><span class="status-tag ${o.status}">${o.status}</span></td>
+              <td>${actionBtn}</td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        loading.style.display = 'none';
+        error.textContent = 'Error loading orders: ' + err.message;
+        error.style.display = 'block';
+      }
+    }
+
+    async function cancelOrder(id) {
+      if (!confirm('Cancel this order? The painting will become available in the studio catalog again.')) return;
+
+      try {
+        const res = await fetch(`/api/orders/${id}/cancel`, {
+          method: 'PATCH',
+          headers: getAuthHeaders()
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          showNotification('✓ Order cancelled. The painting is now available again.', 'success', 'recordsActionMessage');
+          loadMyOrders();
+          loadPaintings();
+        } else {
+          showNotification(`⚠️ Could not cancel order: ${data.error}`, 'error', 'recordsActionMessage');
+        }
+      } catch (err) {
+        showNotification('Error cancelling order: ' + err.message, 'error', 'recordsActionMessage');
+      }
+    }
+
+    // ========================================================================
+    // Admin Dashboard: Add Painting, Confirm/Decline Bookings, All Orders
+    // ========================================================================
+    async function loadAdminData() {
+      if (currentUser.role !== 'admin') return;
+      await Promise.all([loadAdminBookings(), loadAdminOrders()]);
+    }
+
+    async function loadAdminBookings() {
+      const loading = document.getElementById('adminBookingsLoading');
+      const error = document.getElementById('adminBookingsError');
+      const empty = document.getElementById('adminBookingsEmpty');
+      const wrapper = document.getElementById('adminBookingsTableWrapper');
+      const tbody = document.getElementById('adminBookingsTbody');
+
+      loading.style.display = 'block';
+      error.style.display = 'none';
+      empty.style.display = 'none';
+      wrapper.style.display = 'none';
+      tbody.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/bookings', { headers: getAuthHeaders() });
+        const data = await res.json();
+        loading.style.display = 'none';
+
+        if (!res.ok) {
+          error.textContent = data.error || 'Failed to load studio bookings.';
+          error.style.display = 'block';
+          return;
+        }
+
+        if (!Array.isArray(data) || data.length === 0) {
+          empty.style.display = 'block';
+          return;
+        }
+
+        wrapper.style.display = 'block';
+        tbody.innerHTML = data.map(b => {
+          const customerEmail = b.customerId ? b.customerId.email : 'Unknown customer';
+          let decisionButtons = '-';
+
+          if (b.status === 'requested') {
+            decisionButtons = `
+              <div style="display:flex; gap:4px;">
+                <button class="btn btn-primary btn-sm" onclick="setBookingStatus('${b._id}', 'confirmed')">Confirm</button>
+                <button class="btn btn-danger btn-sm" onclick="setBookingStatus('${b._id}', 'declined')">Decline</button>
+              </div>
+            `;
+          }
+
+          return `
+            <tr>
+              <td><strong>${formatDate(b.date)}</strong></td>
+              <td>${escapeHtml(customerEmail)}</td>
+              <td>${b.size} sq ft</td>
+              <td>${escapeHtml(b.address)}</td>
+              <td>$${b.price.toLocaleString()}</td>
+              <td><span class="status-tag ${b.status}">${b.status}</span></td>
+              <td>${decisionButtons}</td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        loading.style.display = 'none';
+        error.textContent = 'Error loading studio bookings: ' + err.message;
+        error.style.display = 'block';
+      }
+    }
+
+    async function setBookingStatus(id, newStatus) {
+      try {
+        const res = await fetch(`/api/bookings/${id}/status`, {
+          method: 'PATCH',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ status: newStatus })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          showNotification(`✓ Booking status updated to ${newStatus}.`, 'success', 'adminActionMessage');
+          loadAdminBookings();
+        } else {
+          showNotification(`⚠️ Could not update status: ${data.error}`, 'error', 'adminActionMessage');
+        }
+      } catch (err) {
+        showNotification('Error updating booking: ' + err.message, 'error', 'adminActionMessage');
+      }
+    }
+
+    async function loadAdminOrders() {
+      const loading = document.getElementById('adminOrdersLoading');
+      const error = document.getElementById('adminOrdersError');
+      const empty = document.getElementById('adminOrdersEmpty');
+      const wrapper = document.getElementById('adminOrdersTableWrapper');
+      const tbody = document.getElementById('adminOrdersTbody');
+
+      loading.style.display = 'block';
+      error.style.display = 'none';
+      empty.style.display = 'none';
+      wrapper.style.display = 'none';
+      tbody.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/orders', { headers: getAuthHeaders() });
+        const data = await res.json();
+        loading.style.display = 'none';
+
+        if (!res.ok) {
+          error.textContent = data.error || 'Failed to load studio orders.';
+          error.style.display = 'block';
+          return;
+        }
+
+        if (!Array.isArray(data) || data.length === 0) {
+          empty.style.display = 'block';
+          return;
+        }
+
+        wrapper.style.display = 'block';
+        tbody.innerHTML = data.map(o => {
+          const title = o.paintingId ? o.paintingId.title : 'Archived Artwork';
+          const price = o.paintingId ? o.paintingId.price : '-';
+          const customerEmail = o.customerId ? o.customerId.email : 'Unknown customer';
+
+          return `
+            <tr>
+              <td><strong>${escapeHtml(title)}</strong></td>
+              <td>${escapeHtml(customerEmail)}</td>
+              <td>$${typeof price === 'number' ? price.toLocaleString() : price}</td>
+              <td><span class="status-tag ${o.status}">${o.status}</span></td>
+              <td>${formatDate(o.createdAt)}</td>
+            </tr>
+          `;
+        }).join('');
+
+      } catch (err) {
+        loading.style.display = 'none';
+        error.textContent = 'Error loading studio orders: ' + err.message;
+        error.style.display = 'block';
+      }
+    }
+
+    async function handleAddPainting(e) {
+      e.preventDefault();
+      const msgBox = document.getElementById('adminActionMessage');
+      const btn = document.getElementById('btnAddPainting');
+
+      const title = document.getElementById('newPaintingTitle').value;
+      const price = document.getElementById('newPaintingPrice').value;
+      const description = document.getElementById('newPaintingDesc').value;
+
+      btn.disabled = true;
+      btn.textContent = 'Adding Artwork...';
+      msgBox.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/paintings', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ title, price, description })
+        });
+
+        const data = await res.json();
+        btn.disabled = false;
+        btn.textContent = 'Add to Studio Gallery';
+
+        if (res.ok) {
+          msgBox.innerHTML = `<div class="status-box success">✓ Painting "${data.painting.title}" added to studio gallery!</div>`;
+          document.getElementById('adminAddPaintingForm').reset();
+          loadPaintings();
+        } else {
+          msgBox.innerHTML = `<div class="status-box error">⚠️ Failed to add painting: ${data.error}</div>`;
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Add to Studio Gallery';
+        msgBox.innerHTML = `<div class="status-box error">Error adding painting: ${err.message}</div>`;
+      }
+    }
+
+    // ========================================================================
+    // Utility Helpers
+    // ========================================================================
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
