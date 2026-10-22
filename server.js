@@ -9,6 +9,7 @@ const {
   Painting,
   Order,
   Booking,
+  PotteryRequest,
   connectDB,
   normalizeDate,
   seedDefaults,
@@ -23,7 +24,7 @@ const {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Load seed config if present
+// Load seed config from seed.json (Single source of truth for items, glazes, rates)
 let seedConfig = {};
 try {
   const seedPath = path.join(__dirname, 'seed.json');
@@ -36,6 +37,8 @@ try {
 
 const RATE_PER_SQFT = Number(process.env.RATE_PER_SQFT) || (seedConfig.mural && seedConfig.mural.ratePerSqFt) || 150;
 const CURRENCY = seedConfig.currency || 'INR';
+const POTTERY_ITEMS = Array.isArray(seedConfig.potteryItems) ? seedConfig.potteryItems : [];
+const GLAZES = Array.isArray(seedConfig.glazes) ? seedConfig.glazes : [];
 
 // Body parsing middleware
 app.use(express.json());
@@ -46,15 +49,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 
 // ============================================================================
-// Public / Auth Utility Endpoints
+// Public / Configuration & Auth Utility Endpoints
 // ============================================================================
 
-// App Configuration (Pricing rate from seed data / env)
+// App Configuration & Seed Options
 app.get('/api/config', (req, res) => {
   res.json({
     studioName: 'Trail Studio',
     ratePerSqFt: RATE_PER_SQFT,
     currency: CURRENCY,
+    potteryItems: POTTERY_ITEMS,
+    glazes: GLAZES,
+  });
+});
+
+// Pottery Catalog Options (Items & Glazes from seed data)
+app.get('/api/pottery/options', authenticate, (req, res) => {
+  res.json({
+    items: POTTERY_ITEMS,
+    glazes: GLAZES,
   });
 });
 
@@ -101,10 +114,10 @@ app.get('/api/auth/me', authenticate, (req, res) => {
 });
 
 // ============================================================================
-// Paintings Endpoints
+// 1. Paintings Endpoints
 // ============================================================================
 
-// 1. GET /api/paintings (Browse all paintings - open to logged-in users)
+// GET /api/paintings (Browse all paintings - open to logged-in users)
 app.get('/api/paintings', authenticate, async (req, res) => {
   try {
     const paintings = await Painting.find({}).sort({ createdAt: -1 });
@@ -114,7 +127,7 @@ app.get('/api/paintings', authenticate, async (req, res) => {
   }
 });
 
-// 2. POST /api/paintings (Add painting - Studio/Admin only)
+// POST /api/paintings (Add painting - Studio/Admin only)
 app.post('/api/paintings', authenticate, requireRole('admin', 'studio'), async (req, res) => {
   try {
     const { title, price, artist, description, imageUrl } = req.body;
@@ -146,7 +159,59 @@ app.post('/api/paintings', authenticate, requireRole('admin', 'studio'), async (
   }
 });
 
-// 3. POST /api/paintings/:id/buy (Buy painting - Customer only)
+// PATCH /api/paintings/:id (Edit painting - Studio/Admin only, only while available)
+app.patch('/api/paintings/:id', authenticate, requireRole('admin', 'studio'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid painting ID.' });
+    }
+
+    const painting = await Painting.findById(id);
+    if (!painting) {
+      return res.status(404).json({ error: 'Painting not found.' });
+    }
+
+    // Business rule: Studio can edit paintings only while they are available
+    if (!painting.isAvailable) {
+      return res.status(400).json({
+        error: 'Cannot edit painting: this painting has already been sold.',
+      });
+    }
+
+    const { title, price, artist, description, imageUrl } = req.body;
+
+    if (title !== undefined) {
+      if (!title || typeof title !== 'string' || !title.trim()) {
+        return res.status(400).json({ error: 'Painting title cannot be empty.' });
+      }
+      painting.title = title.trim();
+    }
+
+    if (price !== undefined) {
+      const priceNum = Number(price);
+      if (isNaN(priceNum) || priceNum <= 0) {
+        return res.status(400).json({ error: 'Price must be a positive number greater than 0.' });
+      }
+      painting.price = priceNum;
+    }
+
+    if (artist !== undefined) painting.artist = artist.trim();
+    if (description !== undefined) painting.description = description.trim();
+    if (imageUrl !== undefined) painting.imageUrl = imageUrl.trim();
+
+    await painting.save();
+
+    res.json({
+      message: 'Painting updated successfully.',
+      painting,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update painting: ' + err.message });
+  }
+});
+
+// POST /api/paintings/:id/buy (Buy painting - Customer only)
 // Atomic concurrency check: Painting is one of a kind and can only be bought once.
 app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async (req, res) => {
   try {
@@ -191,7 +256,7 @@ app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async 
 });
 
 // ============================================================================
-// Orders Endpoints
+// 2. Orders Endpoints
 // ============================================================================
 
 // GET /api/orders (Customer sees only what they own; Studio sees all)
@@ -210,7 +275,7 @@ app.get('/api/orders', authenticate, async (req, res) => {
   }
 });
 
-// PATCH /api/orders/:id/cancel (Customer only - cancels their order and frees painting)
+// PATCH /api/orders/:id/cancel (Customer only - cancels order and makes painting available again)
 app.patch('/api/orders/:id/cancel', authenticate, requireRole('customer'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -248,10 +313,10 @@ app.patch('/api/orders/:id/cancel', authenticate, requireRole('customer'), async
 });
 
 // ============================================================================
-// Wall Bookings Endpoints
+// 3. Wall Bookings Endpoints
 // ============================================================================
 
-// 1. POST /api/bookings (Book a wall date 7-90 days away, size 10-500 sq ft)
+// POST /api/bookings (Book a wall date 7-90 days away, size 10-500 sq ft)
 app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res) => {
   try {
     const { date, size, address } = req.body;
@@ -298,7 +363,6 @@ app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res
       });
     }
 
-    // Price: wall size * rate per sq ft (₹150 from seedData)
     const price = sizeNum * RATE_PER_SQFT;
 
     const booking = new Booking({
@@ -326,7 +390,7 @@ app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res
   }
 });
 
-// 2. GET /api/bookings (List bookings: Customer sees only what they own; Studio sees all)
+// GET /api/bookings (List bookings: Customer sees only what they own; Studio sees all)
 app.get('/api/bookings', authenticate, async (req, res) => {
   try {
     const isStudio = req.user.role === 'admin' || req.user.role === 'studio';
@@ -341,7 +405,7 @@ app.get('/api/bookings', authenticate, async (req, res) => {
   }
 });
 
-// 3. GET /api/bookings/:id (Get specific booking - enforces customer ownership or returns 404)
+// GET /api/bookings/:id (Get specific booking - enforces customer ownership or returns 404)
 app.get('/api/bookings/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
@@ -365,7 +429,7 @@ app.get('/api/bookings/:id', authenticate, async (req, res) => {
   }
 });
 
-// 4. PATCH /api/bookings/:id/status (Confirm or decline booking - Studio/Admin only)
+// PATCH /api/bookings/:id/status (Confirm or decline booking - Studio/Admin only)
 app.patch('/api/bookings/:id/status', authenticate, requireRole('admin', 'studio'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -398,7 +462,7 @@ app.patch('/api/bookings/:id/status', authenticate, requireRole('admin', 'studio
   }
 });
 
-// 5. PATCH /api/bookings/:id/cancel (Customer only - can cancel until 3 days before the date)
+// PATCH /api/bookings/:id/cancel (Customer only - can cancel until 3 days before the date)
 app.patch('/api/bookings/:id/cancel', authenticate, requireRole('customer'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -441,6 +505,279 @@ app.patch('/api/bookings/:id/cancel', authenticate, requireRole('customer'), asy
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to cancel booking: ' + err.message });
+  }
+});
+
+// ============================================================================
+// 4. Custom Pottery Endpoints (Items & glazes validated against seed.json)
+// ============================================================================
+
+// Helper to validate pottery item & glaze IDs against seed data
+function isValidPotteryItem(itemId) {
+  return POTTERY_ITEMS.some((i) => i.id === itemId);
+}
+
+function isValidGlaze(glazeId) {
+  return GLAZES.some((g) => g.id === glazeId);
+}
+
+// POST /api/pottery (Customer creates pottery request)
+// Validates: authenticated customer, valid seed item, valid seed glaze, quantity 1-12, needed-by >= 14 days
+app.post('/api/pottery', authenticate, requireRole('customer'), async (req, res) => {
+  try {
+    const { itemId, glazeId, quantity, neededBy } = req.body;
+
+    // Validate item against seed data
+    if (!itemId || !isValidPotteryItem(itemId)) {
+      return res.status(400).json({
+        error: 'Invalid pottery item. Please choose a valid item from the catalog.',
+      });
+    }
+
+    // Validate glaze against seed data
+    if (!glazeId || !isValidGlaze(glazeId)) {
+      return res.status(400).json({
+        error: 'Invalid glaze selection. Please choose a valid glaze from the catalog.',
+      });
+    }
+
+    // Validate quantity: integer between 1 and 12
+    const qtyNum = Number(quantity);
+    if (!Number.isInteger(qtyNum) || qtyNum < 1 || qtyNum > 12) {
+      return res.status(400).json({
+        error: 'Quantity must be a whole number between 1 and 12.',
+      });
+    }
+
+    // Validate needed-by date: at least 14 days away from today
+    const normalizedDate = normalizeDate(neededBy);
+    if (!normalizedDate) {
+      return res.status(400).json({
+        error: 'Invalid needed-by date format. Please provide a valid date (YYYY-MM-DD).',
+      });
+    }
+
+    const todayUtc = normalizeDate(new Date());
+    const diffMs = normalizedDate.getTime() - todayUtc.getTime();
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 14) {
+      return res.status(400).json({
+        error: `Needed-by date must be at least 14 days away from today. (Selected date is ${diffDays} days away).`,
+      });
+    }
+
+    const request = new PotteryRequest({
+      customerId: req.user._id,
+      itemId,
+      glazeId,
+      quantity: qtyNum,
+      neededBy: normalizedDate,
+      status: 'requested',
+    });
+
+    await request.save();
+
+    res.status(201).json({
+      message: 'Custom pottery request submitted successfully!',
+      request,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create pottery request: ' + err.message });
+  }
+});
+
+// GET /api/pottery (List pottery requests: Customer sees own; Studio sees all)
+app.get('/api/pottery', authenticate, async (req, res) => {
+  try {
+    const isStudio = req.user.role === 'admin' || req.user.role === 'studio';
+    const query = isStudio ? {} : { customerId: req.user._id };
+
+    const requests = await PotteryRequest.find(query)
+      .populate('customerId', 'email role')
+      .sort({ createdAt: -1 });
+
+    res.json(requests);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve pottery requests: ' + err.message });
+  }
+});
+
+// GET /api/pottery/:id (Individual pottery request - customer privacy enforced or 404)
+app.get('/api/pottery/:id', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ error: 'Pottery request not found.' });
+    }
+
+    const request = await PotteryRequest.findById(id).populate('customerId', 'email role');
+    if (!request) {
+      return res.status(404).json({ error: 'Pottery request not found.' });
+    }
+
+    // Privacy rule: Customer attempting to access another customer's request gets 404 Not Found
+    if (!enforceOwnership(request.customerId._id || request.customerId, req.user)) {
+      return res.status(404).json({ error: 'Pottery request not found.' });
+    }
+
+    res.json(request);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve pottery request: ' + err.message });
+  }
+});
+
+// PATCH /api/pottery/:id (Customer edits request - ONLY allowed while status === 'requested')
+app.patch('/api/pottery/:id', authenticate, requireRole('customer'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ error: 'Pottery request not found.' });
+    }
+
+    const request = await PotteryRequest.findById(id);
+    if (!request) {
+      return res.status(404).json({ error: 'Pottery request not found.' });
+    }
+
+    // Customer ownership check
+    if (!enforceOwnership(request.customerId, req.user)) {
+      return res.status(404).json({ error: 'Pottery request not found.' });
+    }
+
+    // Business rule: A customer can edit a request ONLY while it is still 'requested'
+    if (request.status !== 'requested') {
+      return res.status(400).json({
+        error: `Cannot edit pottery request: request has already been ${request.status}.`,
+      });
+    }
+
+    const { itemId, glazeId, quantity, neededBy } = req.body;
+
+    if (itemId !== undefined) {
+      if (!isValidPotteryItem(itemId)) {
+        return res.status(400).json({ error: 'Invalid pottery item.' });
+      }
+      request.itemId = itemId;
+    }
+
+    if (glazeId !== undefined) {
+      if (!isValidGlaze(glazeId)) {
+        return res.status(400).json({ error: 'Invalid glaze selection.' });
+      }
+      request.glazeId = glazeId;
+    }
+
+    if (quantity !== undefined) {
+      const qtyNum = Number(quantity);
+      if (!Number.isInteger(qtyNum) || qtyNum < 1 || qtyNum > 12) {
+        return res.status(400).json({ error: 'Quantity must be an integer between 1 and 12.' });
+      }
+      request.quantity = qtyNum;
+    }
+
+    if (neededBy !== undefined) {
+      const normalizedDate = normalizeDate(neededBy);
+      if (!normalizedDate) {
+        return res.status(400).json({ error: 'Invalid needed-by date format.' });
+      }
+
+      const todayUtc = normalizeDate(new Date());
+      const diffMs = normalizedDate.getTime() - todayUtc.getTime();
+      const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 14) {
+        return res.status(400).json({
+          error: `Needed-by date must be at least 14 days away from today. (Selected date is ${diffDays} days away).`,
+        });
+      }
+      request.neededBy = normalizedDate;
+    }
+
+    await request.save();
+
+    res.json({
+      message: 'Pottery request updated successfully.',
+      request,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update pottery request: ' + err.message });
+  }
+});
+
+// PATCH /api/pottery/:id/cancel (Customer cancels request - ONLY allowed while status === 'requested')
+app.patch('/api/pottery/:id/cancel', authenticate, requireRole('customer'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ error: 'Pottery request not found.' });
+    }
+
+    const request = await PotteryRequest.findById(id);
+    if (!request) {
+      return res.status(404).json({ error: 'Pottery request not found.' });
+    }
+
+    if (!enforceOwnership(request.customerId, req.user)) {
+      return res.status(404).json({ error: 'Pottery request not found.' });
+    }
+
+    // Business rule: A customer can cancel a request ONLY while it is still 'requested'
+    if (request.status !== 'requested') {
+      return res.status(400).json({
+        error: `Cannot cancel pottery request: request has already been ${request.status}.`,
+      });
+    }
+
+    request.status = 'cancelled';
+    await request.save();
+
+    res.json({
+      message: 'Pottery request cancelled successfully.',
+      request,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to cancel pottery request: ' + err.message });
+  }
+});
+
+// PATCH /api/pottery/:id/status (Studio accepts or declines request - only transitions from 'requested')
+app.patch('/api/pottery/:id/status', authenticate, requireRole('admin', 'studio'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid pottery request ID.' });
+    }
+
+    if (!['accepted', 'declined'].includes(status)) {
+      return res.status(400).json({
+        error: 'Status must be updated to either "accepted" or "declined".',
+      });
+    }
+
+    const request = await PotteryRequest.findById(id);
+    if (!request) {
+      return res.status(404).json({ error: 'Pottery request not found.' });
+    }
+
+    // Transition only allowed from 'requested'
+    if (request.status !== 'requested') {
+      return res.status(400).json({
+        error: `Cannot update status: request has already been ${request.status}.`,
+      });
+    }
+
+    request.status = status;
+    await request.save();
+
+    res.json({
+      message: `Pottery request has been ${status}.`,
+      request,
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update pottery status: ' + err.message });
   }
 });
 

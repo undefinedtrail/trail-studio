@@ -144,10 +144,49 @@ bookingSchema.index(
   }
 );
 
+// PotteryRequest Schema (Custom Pottery)
+// Customers choose item & glaze from seed.json, quantity (1-12), and needed-by date >= 14 days.
+const potteryRequestSchema = new mongoose.Schema(
+  {
+    customerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    itemId: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    glazeId: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: [1, 'Quantity must be at least 1'],
+      max: [12, 'Quantity cannot exceed 12'],
+    },
+    neededBy: {
+      type: Date,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ['requested', 'accepted', 'declined', 'cancelled'],
+      default: 'requested',
+    },
+  },
+  { timestamps: true }
+);
+
 const User = mongoose.model('User', userSchema);
 const Painting = mongoose.model('Painting', paintingSchema);
 const Order = mongoose.model('Order', orderSchema);
 const Booking = mongoose.model('Booking', bookingSchema);
+const PotteryRequest = mongoose.model('PotteryRequest', potteryRequestSchema);
 
 // ============================================================================
 // 2. Database Connection Helper
@@ -231,7 +270,6 @@ async function seedDefaults() {
 if (require.main === module && process.argv.includes('--seed')) {
   require('dotenv').config();
   connectDB().then(async () => {
-    // Clear and reload
     await Painting.deleteMany({});
     await seedDefaults();
     console.log('[Seed] Re-seeded paintings from seed.json.');
@@ -244,6 +282,7 @@ module.exports = {
   Painting,
   Order,
   Booking,
+  PotteryRequest,
   connectDB,
   normalizeDate,
   seedDefaults,
