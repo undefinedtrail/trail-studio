@@ -3,2249 +3,594 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trail Studio · Handcrafted Art, Wall Murals & Custom Pottery</title>
-  <style>
-    /* ==========================================================================
-       Trail Studio - Clean, Handmade Artisan Stylesheet
-       Pure CSS, zero framework bloat, accessible and responsive
-       ========================================================================== */
-    :root {
-      --bg: #fbf9f5;
-      --card-bg: #ffffff;
-      --text: #2b2927;
-      --text-muted: #6e6b66;
-      --border: #dfd9cf;
-      --accent: #a3472d; /* Terracotta Studio Red */
-      --accent-hover: #863620;
-      --highlight: #2f5661;
-      --tag-bg: #f2eee8;
-      --success-bg: #edf6ee;
-      --success-border: #a4d2a6;
-      --success-text: #205c24;
-      --error-bg: #fdf0ed;
-      --error-border: #f0b5a8;
-      --error-text: #96281b;
-      --warn-bg: #fff9e6;
-      --warn-border: #f3df9b;
-      --warn-text: #7d5a00;
-      --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --font-serif: Georgia, "Times New Roman", serif;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: var(--font-body);
-      line-height: 1.5;
-      padding: 24px 16px;
-    }
-
-    .container {
-      max-width: 1020px;
-      margin: 0 auto;
-    }
-
-    /* Header & Branding */
-    header {
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 18px;
-      margin-bottom: 24px;
-    }
-
-    .studio-brand {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    h1 {
-      font-family: var(--font-serif);
-      font-weight: 600;
-      font-size: 2rem;
-      letter-spacing: -0.02em;
-      color: #1a1918;
-    }
-
-    .studio-subtitle {
-      font-size: 0.95rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    /* Session & Auth Bar */
-    .session-bar {
-      background: var(--tag-bg);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 10px 14px;
-      margin-top: 14px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.88rem;
-    }
-
-    .session-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .role-badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 3px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .role-badge.customer {
-      background: #e1ecf4;
-      color: #2c5777;
-      border: 1px solid #bed3e5;
-    }
-
-    .role-badge.studio, .role-badge.admin {
-      background: #fae4df;
-      color: #8c321d;
-      border: 1px solid #ecc3b9;
-    }
-
-    /* Buttons */
-    button, .btn {
-      font-family: inherit;
-      font-size: 0.88rem;
-      padding: 7px 14px;
-      border-radius: 4px;
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: #ffffff;
-      color: var(--text);
-      font-weight: 500;
-      transition: background-color 0.1s ease, border-color 0.1s ease;
-    }
-
-    button:hover:not(:disabled) {
-      background: #f0ece5;
-      border-color: #b5ada2;
-    }
-
-    button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #ffffff;
-      border-color: var(--accent);
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      background: var(--accent-hover);
-      border-color: var(--accent-hover);
-    }
-
-    .btn-sm {
-      padding: 4px 10px;
-      font-size: 0.8rem;
-    }
-
-    .btn-danger {
-      background: #ffffff;
-      color: var(--error-text);
-      border-color: #e5b0a6;
-    }
-
-    .btn-danger:hover:not(:disabled) {
-      background: #fbebe8;
-      border-color: var(--error-text);
-    }
-
-    /* Navigation Tabs */
-    nav.nav-tabs {
-      display: flex;
-      gap: 4px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-    }
-
-    .tab-btn {
-      border: none;
-      background: transparent;
-      padding: 10px 16px;
-      font-size: 0.95rem;
-      border-bottom: 2px solid transparent;
-      color: var(--text-muted);
-      border-radius: 0;
-    }
-
-    .tab-btn:hover {
-      background: transparent;
-      color: var(--text);
-    }
-
-    .tab-btn.active {
-      color: var(--accent);
-      border-bottom: 2px solid var(--accent);
-      font-weight: 600;
-    }
-
-    /* Section Panels */
-    .view-panel {
-      display: none;
-    }
-
-    .view-panel.active {
-      display: block;
-    }
-
-    .section-header {
-      margin-bottom: 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .section-header h2 {
-      font-family: var(--font-serif);
-      font-size: 1.45rem;
-      font-weight: 600;
-    }
-
-    /* Status Messages */
-    .status-box {
-      padding: 12px 14px;
-      border-radius: 4px;
-      margin-bottom: 16px;
-      font-size: 0.9rem;
-      line-height: 1.4;
-    }
-
-    .status-box.loading {
-      background: var(--warn-bg);
-      border: 1px solid var(--warn-border);
-      color: var(--warn-text);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .status-box.empty {
-      background: #f7f6f2;
-      border: 1px dashed var(--border);
-      color: var(--text-muted);
-      text-align: center;
-      padding: 24px 16px;
-    }
-
-    .status-box.error {
-      background: var(--error-bg);
-      border: 1px solid var(--error-border);
-      color: var(--error-text);
-    }
-
-    .status-box.success {
-      background: var(--success-bg);
-      border: 1px solid var(--success-border);
-      color: var(--success-text);
-    }
-
-    /* Painting Grid */
-    .painting-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-      gap: 20px;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-
-    .card-img-wrapper {
-      width: 100%;
-      height: 200px;
-      background: #f4efe9;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .card-img-wrapper img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .card-body {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      flex-grow: 1;
-    }
-
-    .card h3 {
-      font-family: var(--font-serif);
-      font-size: 1.15rem;
-      margin-bottom: 4px;
-      color: #1a1918;
-      line-height: 1.3;
-    }
-
-    .card-artist {
-      font-size: 0.8rem;
-      color: var(--accent);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin-bottom: 8px;
-    }
-
-    .card p.desc {
-      color: var(--text-muted);
-      font-size: 0.86rem;
-      margin-bottom: 14px;
-      line-height: 1.4;
-      flex-grow: 1;
-    }
-
-    .card-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-top: 1px solid #f0ede6;
-      padding-top: 12px;
-      margin-top: 8px;
-    }
-
-    .price {
-      font-family: var(--font-serif);
-      font-size: 1.15rem;
-      font-weight: 600;
-      color: #1a1918;
-    }
-
-    .sold-badge {
-      background: #eeebe6;
-      color: #79746e;
-      font-size: 0.78rem;
-      padding: 3px 8px;
-      border-radius: 3px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    /* Forms */
-    form.studio-form {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      padding: 20px;
-      margin-bottom: 24px;
-      max-width: 580px;
-    }
-
-    .form-group {
-      margin-bottom: 14px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 0.86rem;
-      font-weight: 600;
-      margin-bottom: 4px;
-      color: #3b3835;
-    }
-
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-      width: 100%;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      font-family: inherit;
-      font-size: 0.9rem;
-      background: #ffffff;
-      color: var(--text);
-    }
-
-    .form-group input:focus,
-    .form-group textarea:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .help-text {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    /* Tables */
-    .data-table-wrapper {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      overflow-x: auto;
-      margin-bottom: 24px;
-    }
-
-    table.data-table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      font-size: 0.88rem;
-    }
-
-    table.data-table th,
-    table.data-table td {
-      padding: 10px 14px;
-      border-bottom: 1px solid #ede8e1;
-    }
-
-    table.data-table th {
-      background: var(--tag-bg);
-      font-weight: 600;
-      color: #3b3835;
-      font-size: 0.82rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    table.data-table tr:last-child td {
-      border-bottom: none;
-    }
-
-    /* Status Badges */
-    .status-tag {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 0.76rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    .status-tag.requested { background: #fff4d6; color: #7f5c00; border: 1px solid #f0dc9e; }
-    .status-tag.confirmed, .status-tag.accepted { background: #e5f6e8; color: #1c6b29; border: 1px solid #b3e6ba; }
-    .status-tag.declined  { background: #fbe8e6; color: #8e2b20; border: 1px solid #f1c1bc; }
-    .status-tag.cancelled { background: #eeebe6; color: #6b6762; border: 1px solid #d9d4cc; }
-    .status-tag.placed    { background: #e2f0fb; color: #1b5380; border: 1px solid #b9daf2; }
-
-    /* Modal for Editing */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.45);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 16px;
-    }
-
-    .modal-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 24px;
-      max-width: 520px;
-      width: 100%;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
-    }
-
-    .demo-btn-group {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    /* Auth Box */
-    .auth-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 24px;
-      max-width: 440px;
-      margin: 32px auto;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-
-    .auth-tabs {
-      display: flex;
-      margin-bottom: 18px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .auth-tab-btn {
-      flex: 1;
-      border: none;
-      background: transparent;
-      padding: 8px 12px;
-      font-size: 0.95rem;
-      border-bottom: 2px solid transparent;
-      color: var(--text-muted);
-      cursor: pointer;
-    }
-
-    .auth-tab-btn.active {
-      color: var(--accent);
-      border-bottom: 2px solid var(--accent);
-      font-weight: 600;
-    }
-
-    .demo-box {
-      background: var(--tag-bg);
-      border: 1px dashed var(--border);
-      border-radius: 4px;
-      padding: 10px 12px;
-      margin-bottom: 16px;
-      font-size: 0.82rem;
-    }
-  </style>
+  <title>Trail Studio · Handcrafted Traditional Art, Murals & Custom Pottery</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <div class="container">
-    <!-- Header -->
-    <header>
-      <div class="studio-brand">
-        <div>
+  <!-- Top Studio Navbar -->
+  <header class="studio-navbar">
+    <div class="container nav-inner">
+      <a href="#" class="brand">
+        <div class="brand-symbol">T</div>
+        <div class="brand-text">
           <h1>Trail Studio</h1>
-          <div class="studio-subtitle">Traditional Indian Folk Art, Custom Wall Murals & Pottery</div>
+          <span>Handcrafted Indian Art</span>
         </div>
-      </div>
+      </a>
 
-      <!-- Logged-in Session Bar -->
-      <div class="session-bar" id="sessionBar" style="display:none;">
-        <div class="session-info">
-          <span>Logged in as:</span>
-          <strong id="sessionEmail"></strong>
-          <span class="role-badge" id="sessionRole"></span>
-        </div>
-        <div>
-          <button class="btn btn-sm btn-danger" onclick="handleLogout()">Log Out</button>
-        </div>
-      </div>
-    </header>
-
-    <!-- Global Notification Banner -->
-    <div id="globalNotification"></div>
-
-    <!-- Auth View (Shown when not logged in) -->
-    <section id="viewAuth" class="auth-card">
-      <div class="auth-tabs">
-        <button class="auth-tab-btn active" id="tabLoginBtn" onclick="toggleAuthMode('login')">Sign In</button>
-        <button class="auth-tab-btn" id="tabRegisterBtn" onclick="toggleAuthMode('register')">Create Customer Account</button>
-      </div>
-
-      <div class="demo-box" id="demoAccountsBox">
-        <div style="font-weight:600; margin-bottom:4px;">Demo Accounts (Pre-seeded):</div>
-        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Click to fill credentials and log in:</div>
-        <div class="demo-btn-group">
-          <button type="button" class="btn btn-sm" onclick="quickFillLogin('alice@example.com', 'Customer@123')">Alice (Customer)</button>
-          <button type="button" class="btn btn-sm" onclick="quickFillLogin('bob@example.com', 'Customer@123')">Bob (Customer)</button>
-          <button type="button" class="btn btn-sm" onclick="quickFillLogin('studio@artstudio.in', 'Studio@123')">Studio Admin</button>
-        </div>
-      </div>
-
-      <div id="authMessage"></div>
-
-      <!-- Login Form -->
-      <form id="loginForm" onsubmit="handleLoginSubmit(event)">
-        <div class="form-group">
-          <label for="loginEmail">Email Address</label>
-          <input type="email" id="loginEmail" placeholder="e.g. alice@example.com" required>
-        </div>
-        <div class="form-group">
-          <label for="loginPassword">Password</label>
-          <input type="password" id="loginPassword" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn btn-primary" id="btnLoginSubmit" style="width:100%;">Sign In</button>
-      </form>
-
-      <!-- Registration Form -->
-      <form id="registerForm" style="display:none;" onsubmit="handleRegisterSubmit(event)">
-        <div class="form-group">
-          <label for="regEmail">Email Address</label>
-          <input type="email" id="regEmail" placeholder="e.g. new.customer@example.com" required>
-        </div>
-        <div class="form-group">
-          <label for="regPassword">Password (Minimum 6 characters)</label>
-          <input type="password" id="regPassword" minlength="6" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn btn-primary" id="btnRegisterSubmit" style="width:100%;">Create Account</button>
-        <div class="help-text" style="margin-top:6px;">New registrations are created with customer permissions.</div>
-      </form>
-    </section>
-
-    <!-- App Content -->
-    <div id="appContent" style="display:none;">
-      <!-- Navigation Tabs -->
-      <nav class="nav-tabs">
-        <button class="tab-btn active" id="tabPaintingsBtn" onclick="showTab('paintings')">Browse Paintings</button>
-        <button class="tab-btn" id="tabWallBtn" onclick="showTab('wall')">Book a Wall Mural</button>
-        <button class="tab-btn" id="tabPotteryBtn" onclick="showTab('pottery')">Custom Pottery</button>
-        <button class="tab-btn" id="tabMyRecordsBtn" onclick="showTab('records')">My Requests & Orders</button>
-        <button class="tab-btn" id="tabAdminBtn" style="display:none;" onclick="showTab('admin')">Trail Studio Dashboard</button>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#gallerySection" class="nav-link">Collection</a></li>
+          <li><a href="#muralSection" class="nav-link">Wall Murals</a></li>
+          <li><a href="#potterySection" class="nav-link">Custom Pottery</a></li>
+          <li><a href="#customerDashboardSection" id="customerDashboardLink" class="nav-link" style="display: none;">My Commissions</a></li>
+          <li><a href="#adminDashboardSection" id="adminDashboardLink" class="nav-link" style="display: none;">Studio Dashboard</a></li>
+        </ul>
       </nav>
 
-      <!-- VIEW 1: Browse Paintings -->
-      <section id="viewPaintings" class="view-panel active">
-        <div class="section-header">
-          <div>
-            <h2>Original Folk Art Collection</h2>
-            <p class="help-text">Every artwork is handcrafted and one of a kind. Each piece can only be purchased once.</p>
-          </div>
-          <button class="btn" onclick="loadPaintings()">↻ Refresh Gallery</button>
+      <div class="nav-auth-actions">
+        <!-- Guest View -->
+        <div id="navAuthGuest" style="display: flex; gap: 10px;">
+          <button type="button" class="btn btn-primary btn-sm" onclick="showView('authSection')">Sign In</button>
         </div>
 
-        <div id="paintingsLoading" class="status-box loading" style="display:none;">
-          <span>⏳ Loading artworks from Trail Studio collection...</span>
+        <!-- Logged-in User View -->
+        <div id="navAuthUser" class="user-status-pill" style="display: none;">
+          <span id="userRoleBadge" class="role-badge role-customer">Customer</span>
+          <span id="userEmailLabel" class="user-email-text">user@gmail.com</span>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="clearSession()">Log Out</button>
         </div>
-        <div id="paintingsError" class="status-box error" style="display:none;"></div>
-        <div id="paintingsEmpty" class="status-box empty" style="display:none;">
-          <p>No paintings currently listed in the studio.</p>
-        </div>
-
-        <div id="paintingsGrid" class="painting-grid"></div>
-      </section>
-
-      <!-- VIEW 2: Wall Commission Booking (Customer) -->
-      <section id="viewWall" class="view-panel">
-        <div class="section-header">
-          <div>
-            <h2>Book a Wall Mural</h2>
-            <p class="help-text">Commission master artisans to paint directly on your wall. Each calendar date can have only one booking.</p>
-          </div>
-        </div>
-
-        <div id="wallActionMessage"></div>
-
-        <form class="studio-form" id="wallBookingForm" onsubmit="handleWallBooking(event)">
-          <div class="form-group">
-            <label for="bookingDate">Preferred Date (7 to 90 days from today)</label>
-            <input type="date" id="bookingDate" required onchange="validateBookingDateInput()">
-            <div class="help-text" id="dateHelperText">Pick a date between 7 and 90 days from today.</div>
-          </div>
-
-          <div class="form-group">
-            <label for="wallSize">Wall Size (sq ft: 10 to 500)</label>
-            <input type="number" id="wallSize" min="10" max="500" placeholder="e.g. 120" required oninput="updatePriceEstimate()">
-            <div class="help-text" id="priceEstimateText">Rate: ₹150 / sq ft. Estimated cost: ₹0</div>
-          </div>
-
-          <div class="form-group">
-            <label for="wallAddress">Physical Wall Location / Site Address</label>
-            <textarea id="wallAddress" rows="3" placeholder="Plot, Street, City, Pincode" required></textarea>
-          </div>
-
-          <button type="submit" class="btn btn-primary" id="btnSubmitBooking">Request Wall Booking</button>
-        </form>
-      </section>
-
-      <!-- VIEW 3: Custom Pottery Request (Customer) -->
-      <section id="viewPottery" class="view-panel">
-        <div class="section-header">
-          <div>
-            <h2>Request Custom Pottery</h2>
-            <p class="help-text">Choose a traditional clay form and natural glaze finish. Handcrafted with a minimum 14-day creation window.</p>
-          </div>
-        </div>
-
-        <div id="potteryActionMessage"></div>
-
-        <form class="studio-form" id="potteryRequestForm" onsubmit="handlePotteryRequest(event)">
-          <div class="form-group">
-            <label for="potteryItemSelect">Choose Pottery Item</label>
-            <select id="potteryItemSelect" required></select>
-            <div class="help-text">Items crafted on traditional potters' wheels using local terracotta and fine clays.</div>
-          </div>
-
-          <div class="form-group">
-            <label for="potteryGlazeSelect">Choose Glaze Finish</label>
-            <select id="potteryGlazeSelect" required></select>
-            <div class="help-text">All glazes are lead-free natural and mineral pigment washes.</div>
-          </div>
-
-          <div class="form-group">
-            <label for="potteryQuantity">Quantity (1 to 12 pieces)</label>
-            <input type="number" id="potteryQuantity" min="1" max="12" value="1" required>
-          </div>
-
-          <div class="form-group">
-            <label for="potteryNeededBy">Needed-by Date (At least 14 days away)</label>
-            <input type="date" id="potteryNeededBy" required onchange="validatePotteryDateInput()">
-            <div class="help-text" id="potteryDateHelperText">Pick a date at least 14 days from today for shaping, drying, glazing, and kiln firing.</div>
-          </div>
-
-          <button type="submit" class="btn btn-primary" id="btnSubmitPottery">Submit Pottery Request</button>
-        </form>
-      </section>
-
-      <!-- VIEW 4: My Requests & Orders (Customer View) -->
-      <section id="viewRecords" class="view-panel">
-        <div class="section-header">
-          <div>
-            <h2>My Requests, Bookings & Orders</h2>
-            <p class="help-text">Track your art purchases, wall mural bookings, and custom pottery commissions.</p>
-          </div>
-          <button class="btn" onclick="loadMyRecords()">↻ Refresh My Records</button>
-        </div>
-
-        <div id="recordsActionMessage"></div>
-
-        <!-- Custom Pottery Sub-section -->
-        <h3 style="font-family: var(--font-serif); margin-bottom: 8px;">My Custom Pottery Requests</h3>
-        <div id="myPotteryLoading" class="status-box loading" style="display:none;">
-          <span>⏳ Loading your pottery requests...</span>
-        </div>
-        <div id="myPotteryError" class="status-box error" style="display:none;"></div>
-        <div id="myPotteryEmpty" class="status-box empty" style="display:none;">
-          <p>You have not submitted any custom pottery requests yet. <a href="javascript:void(0)" onclick="showTab('pottery')">Request custom pottery</a></p>
-        </div>
-        <div class="data-table-wrapper" id="myPotteryTableWrapper" style="display:none;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Glaze</th>
-                <th>Quantity</th>
-                <th>Needed-By Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="myPotteryTbody"></tbody>
-          </table>
-        </div>
-
-        <!-- Wall Bookings Sub-section -->
-        <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">My Wall Bookings</h3>
-        <div id="myBookingsLoading" class="status-box loading" style="display:none;">
-          <span>⏳ Loading your mural bookings...</span>
-        </div>
-        <div id="myBookingsError" class="status-box error" style="display:none;"></div>
-        <div id="myBookingsEmpty" class="status-box empty" style="display:none;">
-          <p>You have no wall bookings yet. <a href="javascript:void(0)" onclick="showTab('wall')">Book a wall painting</a></p>
-        </div>
-        <div class="data-table-wrapper" id="myBookingsTableWrapper" style="display:none;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Wall Size</th>
-                <th>Address</th>
-                <th>Price</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="myBookingsTbody"></tbody>
-          </table>
-        </div>
-
-        <!-- Painting Orders Sub-section -->
-        <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">My Painting Orders</h3>
-        <div id="myOrdersLoading" class="status-box loading" style="display:none;">
-          <span>⏳ Loading your orders...</span>
-        </div>
-        <div id="myOrdersError" class="status-box error" style="display:none;"></div>
-        <div id="myOrdersEmpty" class="status-box empty" style="display:none;">
-          <p>You haven't bought any paintings yet. <a href="javascript:void(0)" onclick="showTab('paintings')">Browse available paintings</a></p>
-        </div>
-        <div class="data-table-wrapper" id="myOrdersTableWrapper" style="display:none;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Artwork</th>
-                <th>Price</th>
-                <th>Order Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="myOrdersTbody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- VIEW 5: Trail Studio Admin Dashboard (Studio Only) -->
-      <section id="viewAdmin" class="view-panel">
-        <div class="section-header">
-          <div>
-            <h2>Trail Studio Dashboard</h2>
-            <p class="help-text">Manage customer pottery commissions, review wall bookings, inspect art orders, and add artworks in the studio catalog.</p>
-          </div>
-          <button class="btn" onclick="loadAdminData()">↻ Refresh Studio Dashboard</button>
-        </div>
-
-        <div id="adminActionMessage"></div>
-
-        <!-- Pottery Requests Management -->
-        <h3 style="font-family: var(--font-serif); margin-bottom: 8px;">All Customer Pottery Requests</h3>
-        <div id="adminPotteryLoading" class="status-box loading" style="display:none;">
-          <span>⏳ Loading all studio pottery requests...</span>
-        </div>
-        <div id="adminPotteryError" class="status-box error" style="display:none;"></div>
-        <div id="adminPotteryEmpty" class="status-box empty" style="display:none;">
-          <p>No customer pottery requests recorded in the system.</p>
-        </div>
-        <div class="data-table-wrapper" id="adminPotteryTableWrapper" style="display:none;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Customer</th>
-                <th>Item</th>
-                <th>Glaze</th>
-                <th>Qty</th>
-                <th>Needed-By</th>
-                <th>Status</th>
-                <th>Studio Decision</th>
-              </tr>
-            </thead>
-            <tbody id="adminPotteryTbody"></tbody>
-          </table>
-        </div>
-
-        <!-- All Wall Bookings Table -->
-        <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">All Customer Wall Bookings</h3>
-        <div id="adminBookingsLoading" class="status-box loading" style="display:none;">
-          <span>⏳ Loading all studio bookings...</span>
-        </div>
-        <div id="adminBookingsError" class="status-box error" style="display:none;"></div>
-        <div id="adminBookingsEmpty" class="status-box empty" style="display:none;">
-          <p>No customer bookings recorded in the system.</p>
-        </div>
-        <div class="data-table-wrapper" id="adminBookingsTableWrapper" style="display:none;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Customer</th>
-                <th>Size</th>
-                <th>Address</th>
-                <th>Price</th>
-                <th>Status</th>
-                <th>Studio Decision</th>
-              </tr>
-            </thead>
-            <tbody id="adminBookingsTbody"></tbody>
-          </table>
-        </div>
-
-        <!-- All Orders Table -->
-        <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">All Painting Orders</h3>
-        <div id="adminOrdersLoading" class="status-box loading" style="display:none;">
-          <span>⏳ Loading all studio orders...</span>
-        </div>
-        <div id="adminOrdersError" class="status-box error" style="display:none;"></div>
-        <div id="adminOrdersEmpty" class="status-box empty" style="display:none;">
-          <p>No painting orders recorded yet.</p>
-        </div>
-        <div class="data-table-wrapper" id="adminOrdersTableWrapper" style="display:none;">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Artwork</th>
-                <th>Customer</th>
-                <th>Price</th>
-                <th>Status</th>
-                <th>Date Placed</th>
-              </tr>
-            </thead>
-            <tbody id="adminOrdersTbody"></tbody>
-          </table>
-        </div>
-
-        <!-- Add New Painting Form -->
-        <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">Add New Artwork to Catalog</h3>
-        <form class="studio-form" id="adminAddPaintingForm" onsubmit="handleAddPainting(event)">
-          <div class="form-group">
-            <label for="newPaintingTitle">Title of Artwork</label>
-            <input type="text" id="newPaintingTitle" placeholder="e.g. Warli Harvest Celebration" required>
-          </div>
-          <div class="form-group">
-            <label for="newPaintingArtist">Artist</label>
-            <input type="text" id="newPaintingArtist" placeholder="e.g. Anjali Deshmukh">
-          </div>
-          <div class="form-group">
-            <label for="newPaintingPrice">Price (₹ INR)</label>
-            <input type="number" id="newPaintingPrice" min="1" placeholder="8500" required>
-          </div>
-          <div class="form-group">
-            <label for="newPaintingDesc">Description / Art Style</label>
-            <textarea id="newPaintingDesc" rows="2" placeholder="e.g. Traditional natural pigments on handmade tussar silk, 50 x 70 cm."></textarea>
-          </div>
-          <div class="form-group">
-            <label for="newPaintingImage">Image URL (Optional)</label>
-            <input type="text" id="newPaintingImage" placeholder="images/p-001.jpg">
-          </div>
-          <button type="submit" class="btn btn-primary" id="btnAddPainting">Add to Trail Studio</button>
-        </form>
-      </section>
-    </div>
-
-    <!-- Modal for Editing Pottery Request -->
-    <div id="editPotteryModal" class="modal-overlay" style="display:none;">
-      <div class="modal-box">
-        <h3 style="font-family: var(--font-serif); margin-bottom: 14px;">Edit Custom Pottery Request</h3>
-        <div id="editPotteryMessage"></div>
-        <form id="editPotteryForm" onsubmit="handleSavePotteryEdit(event)">
-          <input type="hidden" id="editPotteryId">
-          <div class="form-group">
-            <label for="editPotteryItem">Pottery Item</label>
-            <select id="editPotteryItem" required></select>
-          </div>
-          <div class="form-group">
-            <label for="editPotteryGlaze">Glaze Finish</label>
-            <select id="editPotteryGlaze" required></select>
-          </div>
-          <div class="form-group">
-            <label for="editPotteryQuantity">Quantity (1 - 12)</label>
-            <input type="number" id="editPotteryQuantity" min="1" max="12" required>
-          </div>
-          <div class="form-group">
-            <label for="editPotteryNeededBy">Needed-by Date (At least 14 days away)</label>
-            <input type="date" id="editPotteryNeededBy" required>
-          </div>
-          <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
-            <button type="button" class="btn" onclick="closeEditPotteryModal()">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="btnSavePotteryEdit">Save Changes</button>
-          </div>
-        </form>
       </div>
     </div>
+  </header>
 
-    <!-- Modal for Editing Painting (Studio) -->
-    <div id="editPaintingModal" class="modal-overlay" style="display:none;">
-      <div class="modal-box">
-        <h3 style="font-family: var(--font-serif); margin-bottom: 14px;">Edit Artwork Details</h3>
-        <div id="editPaintingMessage"></div>
-        <form id="editPaintingForm" onsubmit="handleSavePaintingEdit(event)">
-          <input type="hidden" id="editPaintingId">
-          <div class="form-group">
-            <label for="editPaintingTitle">Title</label>
-            <input type="text" id="editPaintingTitle" required>
-          </div>
-          <div class="form-group">
-            <label for="editPaintingPrice">Price (₹ INR)</label>
-            <input type="number" id="editPaintingPrice" min="1" required>
-          </div>
-          <div class="form-group">
-            <label for="editPaintingArtist">Artist</label>
-            <input type="text" id="editPaintingArtist">
-          </div>
-          <div class="form-group">
-            <label for="editPaintingDesc">Description</label>
-            <textarea id="editPaintingDesc" rows="3"></textarea>
-          </div>
-          <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
-            <button type="button" class="btn" onclick="closeEditPaintingModal()">Cancel</button>
-            <button type="submit" class="btn btn-primary" id="btnSavePaintingEdit">Save Painting</button>
-          </div>
-        </form>
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-eyebrow">Living Heritage &amp; Artisanal Craft</div>
+      <h2 class="hero-title">Preserving Indian Folk Traditions Through Handcrafted Art</h2>
+      <p class="hero-lead">
+        Original one-of-a-kind Indian folk paintings, custom on-site architectural wall murals, and studio-thrown stoneware pottery crafted with natural mineral pigments.
+      </p>
+      <div class="hero-actions">
+        <a href="#gallerySection" class="btn btn-primary">Explore Collection</a>
+        <a href="#muralSection" class="btn btn-forest">Commission a Mural</a>
       </div>
+
+      <!-- Heritage Pillars -->
+      <div class="heritage-pillars">
+        <div class="pillar-card">
+          <div class="pillar-icon">🎨</div>
+          <div class="pillar-content">
+            <h3>One-of-a-Kind Originals</h3>
+            <p>Every folk painting is entirely unique and bought only once. Handcrafted in Madhubani, Warli, Tanjore, Pattachitra, and Kalamkari styles.</p>
+          </div>
+        </div>
+        <div class="pillar-card">
+          <div class="pillar-icon">🏛️</div>
+          <div class="pillar-content">
+            <h3>On-Site Wall Murals</h3>
+            <p>Authentic large-scale traditional murals painted on-site by master artisans. Transparent pricing at ₹150 / sq ft scheduled 7 to 90 days out.</p>
+          </div>
+        </div>
+        <div class="pillar-card">
+          <div class="pillar-icon">🏺</div>
+          <div class="pillar-content">
+            <h3>Handmade Pottery</h3>
+            <p>Wheel-thrown stoneware glazed in natural heritage mineral tones like Kumkum, Haldi, and Indigo. Fired in small, attentive studio batches.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Container -->
+  <main class="container">
+
+    <!-- Section 1: Folk Paintings Gallery -->
+    <section id="gallerySection" class="section-wrapper">
+      <div class="section-header">
+        <div class="section-title">
+          <h2>Artisan Folk Art Collection</h2>
+          <p>Hand-painted originals using natural mineral pigments, rice paste, and gold leaf on handmade paper, canvas, and cloth.</p>
+        </div>
+        <div class="section-controls">
+          <div class="filter-btn-group">
+            <button type="button" class="filter-btn active" data-filter="all" onclick="filterPaintings('all')">All Works</button>
+            <button type="button" class="filter-btn" data-filter="available" onclick="filterPaintings('available')">Available</button>
+            <button type="button" class="filter-btn" data-filter="sold" onclick="filterPaintings('sold')">Sold / Archived</button>
+          </div>
+          <button type="button" id="adminAddPaintingBtn" class="btn btn-primary btn-sm" style="display: none;" onclick="openAddPaintingModal()">+ Add Painting</button>
+        </div>
+      </div>
+
+      <!-- Paintings Grid -->
+      <div id="paintingsGrid" class="paintings-grid">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+    </section>
+
+    <!-- Section 2: Custom Commissions (Dual Grid: Wall Murals & Pottery) -->
+    <section class="section-wrapper">
+      <div class="services-dual-grid">
+
+        <!-- Wall Mural Commission Card -->
+        <article id="muralSection" class="service-card">
+          <div class="service-card-header">
+            <span class="service-tag">Architectural Art</span>
+            <h3 class="service-title">Wall Mural Commission</h3>
+            <p class="service-desc">
+              Transform residential courtyards, heritage villas, or commercial spaces with authentic on-site Indian wall paintings.
+            </p>
+          </div>
+
+          <form id="muralBookingForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="muralSize" class="form-label">
+                  Wall Size <span class="helper">(10 - 500 sq ft)</span>
+                </label>
+                <input type="number" id="muralSize" class="form-control" placeholder="e.g. 100" min="10" max="500" required>
+              </div>
+
+              <div class="form-group">
+                <label for="muralDate" class="form-label">
+                  Execution Date <span class="helper">(7 - 90 days ahead)</span>
+                </label>
+                <input type="date" id="muralDate" class="form-control" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="muralAddress" class="form-label">Site Address &amp; Location</label>
+              <textarea id="muralAddress" class="form-control" rows="2" placeholder="Full address, floor, and city details..." required></textarea>
+            </div>
+
+            <!-- Live Price Calculator Callout -->
+            <div class="calc-callout">
+              <div>
+                <div class="calc-details" id="muralFormulaDisplay">Enter wall size for live estimate</div>
+                <div style="font-size: 0.75rem; color: var(--color-text-muted);">Rate: <span id="calcRateLabel">₹150 / sq ft</span></div>
+              </div>
+              <div class="calc-price" id="muralCalculatedPrice">₹0</div>
+            </div>
+
+            <button type="submit" class="btn btn-forest btn-block">Submit Mural Commission Request</button>
+          </form>
+        </article>
+
+        <!-- Custom Pottery Commission Card -->
+        <article id="potterySection" class="service-card">
+          <div class="service-card-header">
+            <span class="service-tag">Studio Stoneware</span>
+            <h3 class="service-title">Custom Pottery Commission</h3>
+            <p class="service-desc">
+              Wheel-thrown clay pottery hand-glazed in traditional mineral hues. Fired in small studio batches with a minimum 14-day curing cycle.
+            </p>
+          </div>
+
+          <form id="potteryCommissionForm">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="potteryItemSelect" class="form-label">Artisan Vessel Shape</label>
+                <select id="potteryItemSelect" class="form-control" required>
+                  <option value="">Loading items...</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="potteryGlazeSelect" class="form-label">Natural Mineral Glaze</label>
+                <select id="potteryGlazeSelect" class="form-control" required>
+                  <option value="">Loading glazes...</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="potteryQuantity" class="form-label">
+                  Quantity <span class="helper">(1 - 12 pieces)</span>
+                </label>
+                <input type="number" id="potteryQuantity" class="form-control" min="1" max="12" value="2" required>
+              </div>
+
+              <div class="form-group">
+                <label for="potteryNeededBy" class="form-label">
+                  Needed By Date <span class="helper">(&ge; 14 days)</span>
+                </label>
+                <input type="date" id="potteryNeededBy" class="form-control" required>
+              </div>
+            </div>
+
+            <div class="calc-callout" style="margin-top: 10px;">
+              <div class="calc-details">
+                Hand-thrown on potter's wheel, sun-cured, and double-fired in kiln.
+              </div>
+              <div style="font-size: 0.85rem; font-weight: 700; color: var(--color-forest);">Small Batch</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Submit Pottery Request</button>
+          </form>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- Section 3: Customer Dashboard ("My Collection & Commissions") -->
+    <section id="customerDashboardSection" class="section-wrapper" style="display: none;">
+      <div class="dashboard-card">
+        <div class="dashboard-header">
+          <div>
+            <h3 style="font-family: var(--font-serif); font-size: 1.45rem;">My Collection &amp; Commissions</h3>
+            <p style="font-size: 0.86rem; color: var(--color-text-secondary);">Manage your acquired paintings, scheduled wall murals, and custom pottery orders.</p>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="loadCustomerDashboardData()">Refresh Data</button>
+        </div>
+
+        <div class="dashboard-tabs">
+          <button type="button" id="custOrdersTabBtn" class="dashboard-tab active" onclick="switchCustomerTab('custOrders')">Purchased Paintings</button>
+          <button type="button" id="custBookingsTabBtn" class="dashboard-tab" onclick="switchCustomerTab('custBookings')">Mural Bookings</button>
+          <button type="button" id="custPotteryTabBtn" class="dashboard-tab" onclick="switchCustomerTab('custPottery')">Custom Pottery</button>
+        </div>
+
+        <div class="dashboard-content">
+          <!-- Customer Orders Tab -->
+          <div id="custOrdersContent">
+            <div class="table-responsive">
+              <table class="studio-table">
+                <thead>
+                  <tr>
+                    <th>Artwork Details</th>
+                    <th>Artist</th>
+                    <th>Price</th>
+                    <th>Date Placed</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="custOrdersTableBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Customer Bookings Tab -->
+          <div id="custBookingsContent" style="display: none;">
+            <div class="table-responsive">
+              <table class="studio-table">
+                <thead>
+                  <tr>
+                    <th>Scheduled Date</th>
+                    <th>Wall Size</th>
+                    <th>Estimated Price</th>
+                    <th>Site Address</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="custBookingsTableBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Customer Pottery Tab -->
+          <div id="custPotteryContent" style="display: none;">
+            <div class="table-responsive">
+              <table class="studio-table">
+                <thead>
+                  <tr>
+                    <th>Shape / Item</th>
+                    <th>Glaze</th>
+                    <th>Quantity</th>
+                    <th>Needed By</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="custPotteryTableBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Administrator Dashboard ("Studio Management") -->
+    <section id="adminDashboardSection" class="section-wrapper" style="display: none;">
+      <div class="dashboard-card">
+        <div class="dashboard-header">
+          <div>
+            <h3 style="font-family: var(--font-serif); font-size: 1.45rem;">Studio Administration</h3>
+            <p style="font-size: 0.86rem; color: var(--color-text-secondary);">Manage gallery catalog, review incoming customer orders, confirm murals, and approve pottery requests.</p>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="openAddPaintingModal()">+ Add New Painting</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="loadAdminDashboardData()">Refresh Data</button>
+          </div>
+        </div>
+
+        <div class="dashboard-tabs">
+          <button type="button" id="adminOrdersTabBtn" class="dashboard-tab active" onclick="switchAdminTab('adminOrders')">Painting Orders</button>
+          <button type="button" id="adminBookingsTabBtn" class="dashboard-tab" onclick="switchAdminTab('adminBookings')">Mural Commissions</button>
+          <button type="button" id="adminPotteryTabBtn" class="dashboard-tab" onclick="switchAdminTab('adminPottery')">Pottery Requests</button>
+        </div>
+
+        <div class="dashboard-content">
+          <!-- Admin Orders Tab -->
+          <div id="adminOrdersContent">
+            <div class="table-responsive">
+              <table class="studio-table">
+                <thead>
+                  <tr>
+                    <th>Painting</th>
+                    <th>Customer</th>
+                    <th>Price</th>
+                    <th>Order Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="adminOrdersTableBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Admin Bookings Tab -->
+          <div id="adminBookingsContent" style="display: none;">
+            <div class="table-responsive">
+              <table class="studio-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Customer</th>
+                    <th>Wall Size</th>
+                    <th>Total Price</th>
+                    <th>Address</th>
+                    <th>Status</th>
+                    <th>Decision</th>
+                  </tr>
+                </thead>
+                <tbody id="adminBookingsTableBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Admin Pottery Tab -->
+          <div id="adminPotteryContent" style="display: none;">
+            <div class="table-responsive">
+              <table class="studio-table">
+                <thead>
+                  <tr>
+                    <th>Item Shape</th>
+                    <th>Glaze</th>
+                    <th>Customer</th>
+                    <th>Quantity</th>
+                    <th>Needed By</th>
+                    <th>Status</th>
+                    <th>Decision</th>
+                  </tr>
+                </thead>
+                <tbody id="adminPotteryTableBody">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Authentication Portal (When not logged in) -->
+    <section id="authSection" class="section-wrapper">
+      <div class="auth-container">
+        <div class="auth-tabs">
+          <button type="button" id="authTabLogin" class="auth-tab-btn active" onclick="switchAuthTab('login')">Account Sign In</button>
+          <button type="button" id="authTabRegister" class="auth-tab-btn" onclick="switchAuthTab('register')">Register New Customer</button>
+        </div>
+
+        <div class="auth-body">
+          <!-- Sign In Form -->
+          <div id="loginFormContainer">
+            <form id="loginForm">
+              <div class="form-group">
+                <label for="loginEmail" class="form-label">Email Address</label>
+                <input type="email" id="loginEmail" class="form-control" placeholder="name@example.com" required autocomplete="email">
+              </div>
+
+              <div class="form-group">
+                <label for="loginPassword" class="form-label">Password</label>
+                <div class="password-input-wrapper">
+                  <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                  <button type="button" class="btn-toggle-password" onclick="togglePasswordVisibility('loginPassword', this)">👁️</button>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block" style="margin-top: 10px;">Sign In to Trail Studio</button>
+            </form>
+          </div>
+
+          <!-- Registration Form -->
+          <div id="registerFormContainer" style="display: none;">
+            <form id="registerForm">
+              <div class="form-group">
+                <label for="regEmail" class="form-label">Email Address</label>
+                <input type="email" id="regEmail" class="form-control" placeholder="name@example.com" required autocomplete="email">
+              </div>
+
+              <div class="form-group">
+                <label for="regPassword" class="form-label">Password <span class="helper">(&ge; 6 characters)</span></label>
+                <div class="password-input-wrapper">
+                  <input type="password" id="regPassword" class="form-control" placeholder="••••••••" required autocomplete="new-password">
+                  <button type="button" class="btn-toggle-password" onclick="togglePasswordVisibility('regPassword', this)">👁️</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="regPasswordConfirm" class="form-label">Confirm Password</label>
+                <div class="password-input-wrapper">
+                  <input type="password" id="regPasswordConfirm" class="form-control" placeholder="••••••••" required autocomplete="new-password">
+                  <button type="button" class="btn-toggle-password" onclick="togglePasswordVisibility('regPasswordConfirm', this)">👁️</button>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-forest btn-block" style="margin-top: 10px;">Create Customer Account</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modals -->
+
+  <!-- Add Painting Modal (Administrator) -->
+  <div id="addPaintingModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Add Painting to Collection</h3>
+        <button type="button" class="modal-close" onclick="closeModal('addPaintingModal')">&times;</button>
+      </div>
+      <form id="addPaintingForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="title" class="form-label">Artwork Title</label>
+            <input type="text" id="title" class="form-control" placeholder="e.g. Madhubani Sun Chariot" required>
+          </div>
+          <div class="form-group">
+            <label for="artist" class="form-label">Artist Name</label>
+            <input type="text" id="artist" class="form-control" placeholder="e.g. Meera Kumari">
+          </div>
+          <div class="form-group">
+            <label for="price" class="form-label">Price (INR)</label>
+            <input type="number" id="price" class="form-control" min="1" placeholder="e.g. 8500" required>
+          </div>
+          <div class="form-group">
+            <label for="imageUrl" class="form-label">Image URL / Path</label>
+            <input type="text" id="imageUrl" class="form-control" placeholder="e.g. images/p-001.jpg">
+          </div>
+          <div class="form-group">
+            <label for="description" class="form-label">Description &amp; Medium</label>
+            <textarea id="description" class="form-control" rows="3" placeholder="Style, medium, and dimensions..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('addPaintingModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Painting</button>
+        </div>
+      </form>
     </div>
   </div>
 
-  <!-- Vanilla Client Logic -->
-  <script>
-    let authToken = localStorage.getItem('trail_studio_token') || null;
-    let currentUser = null;
-
-    try {
-      const storedUser = localStorage.getItem('trail_studio_user');
-      if (storedUser) currentUser = JSON.parse(storedUser);
-    } catch (e) {
-      currentUser = null;
-    }
-
-    let ratePerSqFt = 150;
-    let currencySymbol = '₹';
-    let potteryItems = [];
-    let glazes = [];
-    let cachedPaintings = [];
-    let cachedCustomerPottery = [];
-
-    function getAuthHeaders() {
-      const headers = { 'Content-Type': 'application/json' };
-      if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-      }
-      return headers;
-    }
-
-    async function fetchConfig() {
-      try {
-        const res = await fetch('/api/config');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.ratePerSqFt) ratePerSqFt = data.ratePerSqFt;
-          if (data.currency === 'INR') currencySymbol = '₹';
-          if (Array.isArray(data.potteryItems)) potteryItems = data.potteryItems;
-          if (Array.isArray(data.glazes)) glazes = data.glazes;
-          updatePriceEstimate();
-        }
-      } catch (e) {
-        console.warn('Could not fetch studio config');
-      }
-    }
-
-    function setupPotteryOptions() {
-      const itemSelect = document.getElementById('potteryItemSelect');
-      const glazeSelect = document.getElementById('potteryGlazeSelect');
-      const editItemSelect = document.getElementById('editPotteryItem');
-      const editGlazeSelect = document.getElementById('editPotteryGlaze');
-
-      const itemOptions = potteryItems.map(i => `<option value="${i.id}">${escapeHtml(i.name)} (${i.id})</option>`).join('');
-      const glazeOptions = glazes.map(g => `<option value="${g.id}">${escapeHtml(g.name)} (${g.id})</option>`).join('');
-
-      if (itemSelect) itemSelect.innerHTML = itemOptions;
-      if (glazeSelect) glazeSelect.innerHTML = glazeOptions;
-      if (editItemSelect) editItemSelect.innerHTML = itemOptions;
-      if (editGlazeSelect) editGlazeSelect.innerHTML = glazeOptions;
-
-      // Minimum 14-day lead time for pottery
-      const potteryDateInput = document.getElementById('potteryNeededBy');
-      const editPotteryDateInput = document.getElementById('editPotteryNeededBy');
-      const minDate = new Date();
-      minDate.setDate(minDate.getDate() + 14);
-      const minStr = minDate.toISOString().split('T')[0];
-
-      if (potteryDateInput) potteryDateInput.min = minStr;
-      if (editPotteryDateInput) editPotteryDateInput.min = minStr;
-    }
-
-    async function initApp() {
-      await fetchConfig();
-      setupDateRangeConstraints();
-      setupPotteryOptions();
-
-      // Check existing session
-      if (authToken && currentUser) {
-        try {
-          const res = await fetch('/api/auth/me', { headers: getAuthHeaders() });
-          if (res.ok) {
-            const data = await res.json();
-            currentUser = data.user;
-            showAuthenticatedUI();
-            return;
-          }
-        } catch (e) {}
-      }
-      showAuthView();
-    }
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initApp);
-    } else {
-      initApp();
-    }
-
-    function showAuthView() {
-      const auth = document.getElementById('viewAuth');
-      const session = document.getElementById('sessionBar');
-      const content = document.getElementById('appContent');
-      if (auth) auth.style.display = 'block';
-      if (session) session.style.display = 'none';
-      if (content) content.style.display = 'none';
-    }
-
-    function showAuthenticatedUI() {
-      const auth = document.getElementById('viewAuth');
-      const session = document.getElementById('sessionBar');
-      const content = document.getElementById('appContent');
-      if (auth) auth.style.display = 'none';
-      if (session) session.style.display = 'flex';
-      if (content) content.style.display = 'block';
-
-      document.getElementById('sessionEmail').textContent = currentUser.email;
-      const roleBadge = document.getElementById('sessionRole');
-      roleBadge.textContent = currentUser.role;
-      roleBadge.className = 'role-badge ' + currentUser.role;
-
-      const tabAdminBtn = document.getElementById('tabAdminBtn');
-      const tabWallBtn = document.getElementById('tabWallBtn');
-      const tabPotteryBtn = document.getElementById('tabPotteryBtn');
-      const tabMyRecordsBtn = document.getElementById('tabMyRecordsBtn');
-
-      const isStudio = currentUser.role === 'admin' || currentUser.role === 'studio';
-
-      if (isStudio) {
-        tabAdminBtn.style.display = 'inline-block';
-        tabWallBtn.style.display = 'none';
-        tabPotteryBtn.style.display = 'none';
-        tabMyRecordsBtn.style.display = 'none';
-        showTab('admin');
-      } else {
-        tabAdminBtn.style.display = 'none';
-        tabWallBtn.style.display = 'inline-block';
-        tabPotteryBtn.style.display = 'inline-block';
-        tabMyRecordsBtn.style.display = 'inline-block';
-        showTab('paintings');
-      }
-    }
-
-    function toggleAuthMode(mode) {
-      const loginForm = document.getElementById('loginForm');
-      const registerForm = document.getElementById('registerForm');
-      const tabLoginBtn = document.getElementById('tabLoginBtn');
-      const tabRegisterBtn = document.getElementById('tabRegisterBtn');
-      const demoBox = document.getElementById('demoAccountsBox');
-      document.getElementById('authMessage').innerHTML = '';
-
-      if (mode === 'login') {
-        loginForm.style.display = 'block';
-        registerForm.style.display = 'none';
-        if (demoBox) demoBox.style.display = 'block';
-        tabLoginBtn.classList.add('active');
-        tabRegisterBtn.classList.remove('active');
-      } else {
-        loginForm.style.display = 'none';
-        registerForm.style.display = 'block';
-        if (demoBox) demoBox.style.display = 'none';
-        tabLoginBtn.classList.remove('active');
-        tabRegisterBtn.classList.add('active');
-      }
-    }
-
-    function quickFillLogin(email, password) {
-      toggleAuthMode('login');
-      document.getElementById('loginEmail').value = email;
-      document.getElementById('loginPassword').value = password;
-      submitLoginForm(email, password);
-    }
-
-    async function handleLoginSubmit(e) {
-      if (e) e.preventDefault();
-      const email = document.getElementById('loginEmail').value.trim();
-      const password = document.getElementById('loginPassword').value;
-      await submitLoginForm(email, password);
-    }
-
-    async function submitLoginForm(email, password) {
-      const btn = document.getElementById('btnLoginSubmit');
-      const msgBox = document.getElementById('authMessage');
-
-      btn.disabled = true;
-      btn.textContent = 'Signing in...';
-      msgBox.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-
-        const data = await res.json();
-        if (res.ok && data.token) {
-          authToken = data.token;
-          currentUser = data.user;
-          localStorage.setItem('trail_studio_token', authToken);
-          localStorage.setItem('trail_studio_user', JSON.stringify(currentUser));
-          showAuthenticatedUI();
-          showNotification(`Logged in as ${currentUser.email} (${currentUser.role})`, 'success');
-        } else {
-          msgBox.innerHTML = `<div class="status-box error">${data.error || 'Login failed.'}</div>`;
-        }
-      } catch (err) {
-        msgBox.innerHTML = `<div class="status-box error">Network error: ${err.message}</div>`;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Sign In';
-      }
-    }
-
-    async function handleRegisterSubmit(e) {
-      e.preventDefault();
-      const btn = document.getElementById('btnRegisterSubmit');
-      const msgBox = document.getElementById('authMessage');
-      const email = document.getElementById('regEmail').value.trim();
-      const password = document.getElementById('regPassword').value;
-
-      btn.disabled = true;
-      btn.textContent = 'Creating account...';
-      msgBox.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-
-        const data = await res.json();
-        if (res.ok && data.token) {
-          authToken = data.token;
-          currentUser = data.user;
-          localStorage.setItem('trail_studio_token', authToken);
-          localStorage.setItem('trail_studio_user', JSON.stringify(currentUser));
-          showAuthenticatedUI();
-          showNotification(`Account created! Logged in as ${currentUser.email}`, 'success');
-        } else {
-          msgBox.innerHTML = `<div class="status-box error">${data.error || 'Registration failed.'}</div>`;
-        }
-      } catch (err) {
-        msgBox.innerHTML = `<div class="status-box error">Network error: ${err.message}</div>`;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Create Account';
-      }
-    }
-
-    function handleLogout() {
-      authToken = null;
-      currentUser = null;
-      localStorage.removeItem('trail_studio_token');
-      localStorage.removeItem('trail_studio_user');
-      showAuthView();
-      showNotification('You have been logged out.', 'info');
-    }
-
-    // ========================================================================
-    // Navigation & Notifications
-    // ========================================================================
-    function showTab(tabName) {
-      const tabs = document.querySelectorAll('.nav-tabs .tab-btn');
-      tabs.forEach(t => t.classList.remove('active'));
-
-      const panels = document.querySelectorAll('.view-panel');
-      panels.forEach(p => p.classList.remove('active'));
-
-      if (tabName === 'paintings') {
-        document.getElementById('tabPaintingsBtn').classList.add('active');
-        document.getElementById('viewPaintings').classList.add('active');
-        loadPaintings();
-      } else if (tabName === 'wall') {
-        document.getElementById('tabWallBtn').classList.add('active');
-        document.getElementById('viewWall').classList.add('active');
-      } else if (tabName === 'pottery') {
-        document.getElementById('tabPotteryBtn').classList.add('active');
-        document.getElementById('viewPottery').classList.add('active');
-      } else if (tabName === 'records') {
-        document.getElementById('tabMyRecordsBtn').classList.add('active');
-        document.getElementById('viewRecords').classList.add('active');
-        loadMyRecords();
-      } else if (tabName === 'admin') {
-        document.getElementById('tabAdminBtn').classList.add('active');
-        document.getElementById('viewAdmin').classList.add('active');
-        loadAdminData();
-      }
-    }
-
-    function showNotification(msg, type = 'info', containerId = 'globalNotification') {
-      const container = document.getElementById(containerId);
-      if (!container) return;
-      container.innerHTML = `<div class="status-box ${type}">${msg}</div>`;
-      setTimeout(() => {
-        if (container.innerHTML.includes(msg)) {
-          container.innerHTML = '';
-        }
-      }, 7000);
-    }
-
-    // ========================================================================
-    // Paintings: Load, Buy & Studio Edit
-    // ========================================================================
-    async function loadPaintings() {
-      const loading = document.getElementById('paintingsLoading');
-      const empty = document.getElementById('paintingsEmpty');
-      const error = document.getElementById('paintingsError');
-      const grid = document.getElementById('paintingsGrid');
-
-      loading.style.display = 'block';
-      empty.style.display = 'none';
-      error.style.display = 'none';
-      grid.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/paintings', {
-          headers: getAuthHeaders(),
-        });
-
-        if (res.status === 401) {
-          handleLogout();
-          return;
-        }
-
-        const data = await res.json();
-        loading.style.display = 'none';
-
-        if (!res.ok) {
-          error.textContent = data.error || 'Failed to load paintings.';
-          error.style.display = 'block';
-          return;
-        }
-
-        if (!Array.isArray(data) || data.length === 0) {
-          empty.style.display = 'block';
-          return;
-        }
-
-        cachedPaintings = data;
-
-        grid.innerHTML = data.map(p => {
-          const isCustomer = currentUser && currentUser.role === 'customer';
-          const isStudio = currentUser && (currentUser.role === 'admin' || currentUser.role === 'studio');
-
-          let actionButtons = '';
-          if (p.isAvailable) {
-            if (isCustomer) {
-              actionButtons = `<button class="btn btn-primary btn-sm" onclick="buyPainting('${p._id}', '${escapeHtml(p.title)}', this)">Buy Artwork</button>`;
-            } else if (isStudio) {
-              actionButtons = `<button class="btn btn-sm" onclick="openEditPaintingModal('${p._id}')">Edit</button>`;
-            }
-          } else {
-            actionButtons = `<span class="sold-badge">Sold Out</span>`;
-          }
-
-          const imgTag = p.imageUrl
-            ? `<div class="card-img-wrapper"><img src="${p.imageUrl}" alt="${escapeHtml(p.title)}" onerror="this.onerror=null; this.src=''; this.style.display='none';"></div>`
-            : '';
-
-          return `
-            <div class="card">
-              ${imgTag}
-              <div class="card-body">
-                <div class="card-artist">${escapeHtml(p.artist || 'Traditional')}</div>
-                <h3>${escapeHtml(p.title)}</h3>
-                <p class="desc">${escapeHtml(p.description || '')}</p>
-                <div class="card-footer">
-                  <span class="price">${currencySymbol}${p.price.toLocaleString()}</span>
-                  <div>${actionButtons}</div>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-      } catch (err) {
-        loading.style.display = 'none';
-        error.textContent = 'Network error while retrieving paintings: ' + err.message;
-        error.style.display = 'block';
-      }
-    }
-
-    async function buyPainting(id, title, btnElement) {
-      if (!confirm(`Are you sure you want to purchase "${title}"?`)) return;
-
-      if (btnElement) {
-        btnElement.disabled = true;
-        btnElement.textContent = 'Purchasing...';
-      }
-
-      try {
-        const res = await fetch(`/api/paintings/${id}/buy`, {
-          method: 'POST',
-          headers: getAuthHeaders(),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          showNotification(`✓ Success: You purchased "${title}"!`, 'success');
-          loadPaintings();
-        } else {
-          showNotification(`⚠️ Refusal: ${data.error || 'Could not complete purchase.'}`, 'error');
-          loadPaintings();
-        }
-      } catch (err) {
-        showNotification('Error processing purchase: ' + err.message, 'error');
-      } finally {
-        if (btnElement) {
-          btnElement.disabled = false;
-          btnElement.textContent = 'Buy Artwork';
-        }
-      }
-    }
-
-    function openEditPaintingModal(id) {
-      const painting = cachedPaintings.find(p => p._id === id);
-      if (!painting) return;
-
-      document.getElementById('editPaintingId').value = painting._id;
-      document.getElementById('editPaintingTitle').value = painting.title;
-      document.getElementById('editPaintingPrice').value = painting.price;
-      document.getElementById('editPaintingArtist').value = painting.artist || '';
-      document.getElementById('editPaintingDesc').value = painting.description || '';
-      document.getElementById('editPaintingMessage').innerHTML = '';
-      document.getElementById('editPaintingModal').style.display = 'flex';
-    }
-
-    function closeEditPaintingModal() {
-      document.getElementById('editPaintingModal').style.display = 'none';
-    }
-
-    async function handleSavePaintingEdit(e) {
-      e.preventDefault();
-      const btn = document.getElementById('btnSavePaintingEdit');
-      const id = document.getElementById('editPaintingId').value;
-      const title = document.getElementById('editPaintingTitle').value;
-      const price = Number(document.getElementById('editPaintingPrice').value);
-      const artist = document.getElementById('editPaintingArtist').value;
-      const description = document.getElementById('editPaintingDesc').value;
-      const msgBox = document.getElementById('editPaintingMessage');
-
-      btn.disabled = true;
-      btn.textContent = 'Saving...';
-
-      try {
-        const res = await fetch(`/api/paintings/${id}`, {
-          method: 'PATCH',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ title, price, artist, description }),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          closeEditPaintingModal();
-          showNotification('✓ Painting updated successfully.', 'success');
-          loadPaintings();
-        } else {
-          msgBox.innerHTML = `<div class="status-box error">${data.error || 'Failed to update painting.'}</div>`;
-        }
-      } catch (err) {
-        msgBox.innerHTML = `<div class="status-box error">Error: ${err.message}</div>`;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Save Painting';
-      }
-    }
-
-    // ========================================================================
-    // Wall Booking (Customer)
-    // ========================================================================
-    function setupDateRangeConstraints() {
-      const dateInput = document.getElementById('bookingDate');
-      const today = new Date();
-
-      const minDate = new Date(today);
-      minDate.setDate(minDate.getDate() + 7);
-
-      const maxDate = new Date(today);
-      maxDate.setDate(maxDate.getDate() + 90);
-
-      const minStr = minDate.toISOString().split('T')[0];
-      const maxStr = maxDate.toISOString().split('T')[0];
-
-      if (dateInput) {
-        dateInput.min = minStr;
-        dateInput.max = maxStr;
-      }
-
-      const helper = document.getElementById('dateHelperText');
-      if (helper) helper.textContent = `Permitted booking window: ${minStr} to ${maxStr} (7 to 90 days away).`;
-    }
-
-    function validateBookingDateInput() {
-      const dateInput = document.getElementById('bookingDate');
-      if (!dateInput.value) return;
-
-      const selected = new Date(dateInput.value);
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      selected.setHours(0,0,0,0);
-
-      const diffDays = Math.round((selected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays < 7 || diffDays > 90) {
-        dateInput.setCustomValidity(`Date must be between 7 and 90 days away (selected: ${diffDays} days).`);
-      } else {
-        dateInput.setCustomValidity('');
-      }
-    }
-
-    function updatePriceEstimate() {
-      const sizeInput = document.getElementById('wallSize');
-      const estimateText = document.getElementById('priceEstimateText');
-      if (!sizeInput || !estimateText) return;
-      const size = Number(sizeInput.value);
-
-      if (size >= 10 && size <= 500) {
-        const estimated = size * ratePerSqFt;
-        estimateText.textContent = `Rate: ${currencySymbol}${ratePerSqFt} / sq ft · Total: ${currencySymbol}${estimated.toLocaleString()}`;
-        estimateText.style.color = 'var(--text)';
-      } else {
-        estimateText.textContent = `Rate: ${currencySymbol}${ratePerSqFt} / sq ft · Please enter a size between 10 and 500 sq ft.`;
-        estimateText.style.color = 'var(--text-muted)';
-      }
-    }
-
-    async function handleWallBooking(e) {
-      e.preventDefault();
-      const msgBox = document.getElementById('wallActionMessage');
-      const btn = document.getElementById('btnSubmitBooking');
-
-      const date = document.getElementById('bookingDate').value;
-      const size = document.getElementById('wallSize').value;
-      const address = document.getElementById('wallAddress').value;
-
-      btn.disabled = true;
-      btn.textContent = 'Submitting Request...';
-      msgBox.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/bookings', {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ date, size, address }),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          msgBox.innerHTML = `
-            <div class="status-box success">
-              ✓ <strong>Booking Requested!</strong> Your mural booking on ${formatDate(data.booking.date)} 
-              (${data.booking.size} sq ft · ${currencySymbol}${data.booking.price.toLocaleString()}) has been submitted to Trail Studio.
-            </div>`;
-          document.getElementById('wallBookingForm').reset();
-          updatePriceEstimate();
-        } else {
-          msgBox.innerHTML = `
-            <div class="status-box error">
-              ⚠️ <strong>Booking Refused:</strong> ${data.error || 'Unable to book date.'}
-            </div>`;
-        }
-      } catch (err) {
-        msgBox.innerHTML = `<div class="status-box error">Error submitting request: ${err.message}</div>`;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Request Wall Booking';
-      }
-    }
-
-    // ========================================================================
-    // Custom Pottery (Customer)
-    // ========================================================================
-    function validatePotteryDateInput() {
-      const dateInput = document.getElementById('potteryNeededBy');
-      if (!dateInput.value) return;
-
-      const selected = new Date(dateInput.value);
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      selected.setHours(0,0,0,0);
-
-      const diffDays = Math.round((selected.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays < 14) {
-        dateInput.setCustomValidity(`Needed-by date must be at least 14 days away from today (selected: ${diffDays} days).`);
-      } else {
-        dateInput.setCustomValidity('');
-      }
-    }
-
-    async function handlePotteryRequest(e) {
-      e.preventDefault();
-      const msgBox = document.getElementById('potteryActionMessage');
-      const btn = document.getElementById('btnSubmitPottery');
-
-      const itemId = document.getElementById('potteryItemSelect').value;
-      const glazeId = document.getElementById('potteryGlazeSelect').value;
-      const quantity = Number(document.getElementById('potteryQuantity').value);
-      const neededBy = document.getElementById('potteryNeededBy').value;
-
-      btn.disabled = true;
-      btn.textContent = 'Submitting Request...';
-      msgBox.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/pottery', {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ itemId, glazeId, quantity, neededBy }),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          const itemObj = potteryItems.find(i => i.id === data.request.itemId);
-          const glazeObj = glazes.find(g => g.id === data.request.glazeId);
-          msgBox.innerHTML = `
-            <div class="status-box success">
-              ✓ <strong>Pottery Request Submitted!</strong> 
-              ${data.request.quantity}x ${escapeHtml(itemObj ? itemObj.name : data.request.itemId)} 
-              with ${escapeHtml(glazeObj ? glazeObj.name : data.request.glazeId)} glaze, 
-              needed by ${formatDate(data.request.neededBy)}. Sent to Trail Studio for review!
-            </div>`;
-          document.getElementById('potteryRequestForm').reset();
-          setupPotteryOptions();
-        } else {
-          msgBox.innerHTML = `
-            <div class="status-box error">
-              ⚠️ <strong>Request Refused:</strong> ${data.error || 'Unable to submit pottery request.'}
-            </div>`;
-        }
-      } catch (err) {
-        msgBox.innerHTML = `<div class="status-box error">Error submitting request: ${err.message}</div>`;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Submit Pottery Request';
-      }
-    }
-
-    // ========================================================================
-    // Customer Records: Pottery Requests, Bookings & Orders
-    // ========================================================================
-    async function loadMyRecords() {
-      await Promise.all([loadMyPotteryRequests(), loadMyBookings(), loadMyOrders()]);
-    }
-
-    async function loadMyPotteryRequests() {
-      const loading = document.getElementById('myPotteryLoading');
-      const error = document.getElementById('myPotteryError');
-      const empty = document.getElementById('myPotteryEmpty');
-      const wrapper = document.getElementById('myPotteryTableWrapper');
-      const tbody = document.getElementById('myPotteryTbody');
-
-      loading.style.display = 'block';
-      error.style.display = 'none';
-      empty.style.display = 'none';
-      wrapper.style.display = 'none';
-      tbody.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/pottery', { headers: getAuthHeaders() });
-        const data = await res.json();
-        loading.style.display = 'none';
-
-        if (!res.ok) {
-          error.textContent = data.error || 'Failed to load pottery requests.';
-          error.style.display = 'block';
-          return;
-        }
-
-        if (!Array.isArray(data) || data.length === 0) {
-          empty.style.display = 'block';
-          return;
-        }
-
-        cachedCustomerPottery = data;
-        wrapper.style.display = 'block';
-
-        tbody.innerHTML = data.map(req => {
-          const itemObj = potteryItems.find(i => i.id === req.itemId);
-          const glazeObj = glazes.find(g => g.id === req.glazeId);
-          const isRequested = req.status === 'requested';
-
-          let actionButtons = '-';
-          if (isRequested) {
-            actionButtons = `
-              <div style="display:flex; gap:6px;">
-                <button class="btn btn-sm" onclick="openEditPotteryModal('${req._id}')">Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="cancelPotteryRequest('${req._id}', this)">Cancel</button>
-              </div>
-            `;
-          }
-
-          return `
-            <tr>
-              <td><strong>${escapeHtml(itemObj ? itemObj.name : req.itemId)}</strong></td>
-              <td>${escapeHtml(glazeObj ? glazeObj.name : req.glazeId)}</td>
-              <td>${req.quantity}</td>
-              <td>${formatDate(req.neededBy)}</td>
-              <td><span class="status-tag ${req.status}">${req.status}</span></td>
-              <td>${actionButtons}</td>
-            </tr>
-          `;
-        }).join('');
-
-      } catch (err) {
-        loading.style.display = 'none';
-        error.textContent = 'Error loading pottery requests: ' + err.message;
-        error.style.display = 'block';
-      }
-    }
-
-    function openEditPotteryModal(id) {
-      const request = cachedCustomerPottery.find(r => r._id === id);
-      if (!request) return;
-
-      document.getElementById('editPotteryId').value = request._id;
-      document.getElementById('editPotteryItem').value = request.itemId;
-      document.getElementById('editPotteryGlaze').value = request.glazeId;
-      document.getElementById('editPotteryQuantity').value = request.quantity;
-      if (request.neededBy) {
-        document.getElementById('editPotteryNeededBy').value = new Date(request.neededBy).toISOString().split('T')[0];
-      }
-      document.getElementById('editPotteryMessage').innerHTML = '';
-      document.getElementById('editPotteryModal').style.display = 'flex';
-    }
-
-    function closeEditPotteryModal() {
-      document.getElementById('editPotteryModal').style.display = 'none';
-    }
-
-    async function handleSavePotteryEdit(e) {
-      e.preventDefault();
-      const btn = document.getElementById('btnSavePotteryEdit');
-      const id = document.getElementById('editPotteryId').value;
-      const itemId = document.getElementById('editPotteryItem').value;
-      const glazeId = document.getElementById('editPotteryGlaze').value;
-      const quantity = Number(document.getElementById('editPotteryQuantity').value);
-      const neededBy = document.getElementById('editPotteryNeededBy').value;
-      const msgBox = document.getElementById('editPotteryMessage');
-
-      btn.disabled = true;
-      btn.textContent = 'Saving...';
-
-      try {
-        const res = await fetch(`/api/pottery/${id}`, {
-          method: 'PATCH',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ itemId, glazeId, quantity, neededBy }),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          closeEditPotteryModal();
-          showNotification('✓ Pottery request updated successfully.', 'success', 'recordsActionMessage');
-          loadMyPotteryRequests();
-        } else {
-          msgBox.innerHTML = `<div class="status-box error">${data.error || 'Failed to update request.'}</div>`;
-        }
-      } catch (err) {
-        msgBox.innerHTML = `<div class="status-box error">Error updating request: ${err.message}</div>`;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Save Changes';
-      }
-    }
-
-    async function cancelPotteryRequest(id, btnElement) {
-      if (!confirm('Are you sure you want to cancel this custom pottery request?')) return;
-
-      if (btnElement) {
-        btnElement.disabled = true;
-        btnElement.textContent = 'Cancelling...';
-      }
-
-      try {
-        const res = await fetch(`/api/pottery/${id}/cancel`, {
-          method: 'PATCH',
-          headers: getAuthHeaders(),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          showNotification('✓ Pottery request cancelled successfully.', 'success', 'recordsActionMessage');
-          loadMyPotteryRequests();
-        } else {
-          showNotification(`⚠️ Cancellation Refused: ${data.error}`, 'error', 'recordsActionMessage');
-        }
-      } catch (err) {
-        showNotification('Error cancelling pottery request: ' + err.message, 'error', 'recordsActionMessage');
-      } finally {
-        if (btnElement) {
-          btnElement.disabled = false;
-          btnElement.textContent = 'Cancel';
-        }
-      }
-    }
-
-    async function loadMyBookings() {
-      const loading = document.getElementById('myBookingsLoading');
-      const error = document.getElementById('myBookingsError');
-      const empty = document.getElementById('myBookingsEmpty');
-      const wrapper = document.getElementById('myBookingsTableWrapper');
-      const tbody = document.getElementById('myBookingsTbody');
-
-      loading.style.display = 'block';
-      error.style.display = 'none';
-      empty.style.display = 'none';
-      wrapper.style.display = 'none';
-      tbody.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/bookings', { headers: getAuthHeaders() });
-        const data = await res.json();
-        loading.style.display = 'none';
-
-        if (!res.ok) {
-          error.textContent = data.error || 'Failed to load bookings.';
-          error.style.display = 'block';
-          return;
-        }
-
-        if (!Array.isArray(data) || data.length === 0) {
-          empty.style.display = 'block';
-          return;
-        }
-
-        wrapper.style.display = 'block';
-        tbody.innerHTML = data.map(b => {
-          const bookingDate = new Date(b.date);
-          const today = new Date();
-          const daysRemaining = Math.round((bookingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          const canCancel = (b.status === 'requested' || b.status === 'confirmed') && daysRemaining >= 3;
-
-          let actionContent = '-';
-          if (canCancel) {
-            actionContent = `<button class="btn btn-danger btn-sm" onclick="cancelBooking('${b._id}', this)">Cancel Booking</button>`;
-          } else if (b.status === 'requested' || b.status === 'confirmed') {
-            actionContent = `<span class="help-text">Within 3-day window</span>`;
-          }
-
-          return `
-            <tr>
-              <td><strong>${formatDate(b.date)}</strong></td>
-              <td>${b.size} sq ft</td>
-              <td>${escapeHtml(b.address)}</td>
-              <td>${currencySymbol}${b.price.toLocaleString()}</td>
-              <td><span class="status-tag ${b.status}">${b.status}</span></td>
-              <td>${actionContent}</td>
-            </tr>
-          `;
-        }).join('');
-
-      } catch (err) {
-        loading.style.display = 'none';
-        error.textContent = 'Error loading bookings: ' + err.message;
-        error.style.display = 'block';
-      }
-    }
-
-    async function cancelBooking(id, btnElement) {
-      if (!confirm('Are you sure you want to cancel this wall booking? The reserved date will be released.')) return;
-
-      if (btnElement) {
-        btnElement.disabled = true;
-        btnElement.textContent = 'Cancelling...';
-      }
-
-      try {
-        const res = await fetch(`/api/bookings/${id}/cancel`, {
-          method: 'PATCH',
-          headers: getAuthHeaders(),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          showNotification('✓ Booking successfully cancelled.', 'success', 'recordsActionMessage');
-          loadMyBookings();
-        } else {
-          showNotification(`⚠️ Cancellation Refused: ${data.error}`, 'error', 'recordsActionMessage');
-        }
-      } catch (err) {
-        showNotification('Error cancelling booking: ' + err.message, 'error', 'recordsActionMessage');
-      } finally {
-        if (btnElement) {
-          btnElement.disabled = false;
-          btnElement.textContent = 'Cancel Booking';
-        }
-      }
-    }
-
-    async function loadMyOrders() {
-      const loading = document.getElementById('myOrdersLoading');
-      const error = document.getElementById('myOrdersError');
-      const empty = document.getElementById('myOrdersEmpty');
-      const wrapper = document.getElementById('myOrdersTableWrapper');
-      const tbody = document.getElementById('myOrdersTbody');
-
-      loading.style.display = 'block';
-      error.style.display = 'none';
-      empty.style.display = 'none';
-      wrapper.style.display = 'none';
-      tbody.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/orders', { headers: getAuthHeaders() });
-        const data = await res.json();
-        loading.style.display = 'none';
-
-        if (!res.ok) {
-          error.textContent = data.error || 'Failed to load orders.';
-          error.style.display = 'block';
-          return;
-        }
-
-        if (!Array.isArray(data) || data.length === 0) {
-          empty.style.display = 'block';
-          return;
-        }
-
-        wrapper.style.display = 'block';
-        tbody.innerHTML = data.map(o => {
-          const paintingTitle = o.paintingId ? o.paintingId.title : 'Archived Artwork';
-          const price = o.paintingId ? o.paintingId.price : '-';
-          const canCancel = o.status === 'placed';
-
-          const actionBtn = canCancel
-            ? `<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o._id}', this)">Cancel Order</button>`
-            : '-';
-
-          return `
-            <tr>
-              <td><strong>${escapeHtml(paintingTitle)}</strong></td>
-              <td>${currencySymbol}${typeof price === 'number' ? price.toLocaleString() : price}</td>
-              <td>${formatDate(o.createdAt)}</td>
-              <td><span class="status-tag ${o.status}">${o.status}</span></td>
-              <td>${actionBtn}</td>
-            </tr>
-          `;
-        }).join('');
-
-      } catch (err) {
-        loading.style.display = 'none';
-        error.textContent = 'Error loading orders: ' + err.message;
-        error.style.display = 'block';
-      }
-    }
-
-    async function cancelOrder(id, btnElement) {
-      if (!confirm('Cancel this order? The artwork will become available in the Trail Studio catalog again.')) return;
-
-      if (btnElement) {
-        btnElement.disabled = true;
-        btnElement.textContent = 'Cancelling...';
-      }
-
-      try {
-        const res = await fetch(`/api/orders/${id}/cancel`, {
-          method: 'PATCH',
-          headers: getAuthHeaders(),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          showNotification('✓ Order cancelled. Artwork returned to Trail Studio catalog.', 'success', 'recordsActionMessage');
-          loadMyOrders();
-          loadPaintings();
-        } else {
-          showNotification(`⚠️ Could not cancel order: ${data.error}`, 'error', 'recordsActionMessage');
-        }
-      } catch (err) {
-        showNotification('Error cancelling order: ' + err.message, 'error', 'recordsActionMessage');
-      } finally {
-        if (btnElement) {
-          btnElement.disabled = false;
-          btnElement.textContent = 'Cancel Order';
-        }
-      }
-    }
-
-    // ========================================================================
-    // Trail Studio Dashboard (Studio Only)
-    // ========================================================================
-    async function loadAdminData() {
-      const isStudio = currentUser && (currentUser.role === 'admin' || currentUser.role === 'studio');
-      if (!isStudio) return;
-      await Promise.all([loadAdminPottery(), loadAdminBookings(), loadAdminOrders()]);
-    }
-
-    async function loadAdminPottery() {
-      const loading = document.getElementById('adminPotteryLoading');
-      const error = document.getElementById('adminPotteryError');
-      const empty = document.getElementById('adminPotteryEmpty');
-      const wrapper = document.getElementById('adminPotteryTableWrapper');
-      const tbody = document.getElementById('adminPotteryTbody');
-
-      loading.style.display = 'block';
-      error.style.display = 'none';
-      empty.style.display = 'none';
-      wrapper.style.display = 'none';
-      tbody.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/pottery', { headers: getAuthHeaders() });
-        const data = await res.json();
-        loading.style.display = 'none';
-
-        if (!res.ok) {
-          error.textContent = data.error || 'Failed to load studio pottery requests.';
-          error.style.display = 'block';
-          return;
-        }
-
-        if (!Array.isArray(data) || data.length === 0) {
-          empty.style.display = 'block';
-          return;
-        }
-
-        wrapper.style.display = 'block';
-        tbody.innerHTML = data.map(req => {
-          const customerEmail = req.customerId ? req.customerId.email : 'Unknown customer';
-          const itemObj = potteryItems.find(i => i.id === req.itemId);
-          const glazeObj = glazes.find(g => g.id === req.glazeId);
-
-          let decisionButtons = '-';
-          if (req.status === 'requested') {
-            decisionButtons = `
-              <div style="display:flex; gap:4px;">
-                <button class="btn btn-primary btn-sm" onclick="setPotteryStatus('${req._id}', 'accepted', this)">Accept</button>
-                <button class="btn btn-danger btn-sm" onclick="setPotteryStatus('${req._id}', 'declined', this)">Decline</button>
-              </div>
-            `;
-          }
-
-          return `
-            <tr>
-              <td><strong>${escapeHtml(customerEmail)}</strong></td>
-              <td>${escapeHtml(itemObj ? itemObj.name : req.itemId)}</td>
-              <td>${escapeHtml(glazeObj ? glazeObj.name : req.glazeId)}</td>
-              <td>${req.quantity}</td>
-              <td>${formatDate(req.neededBy)}</td>
-              <td><span class="status-tag ${req.status}">${req.status}</span></td>
-              <td>${decisionButtons}</td>
-            </tr>
-          `;
-        }).join('');
-
-      } catch (err) {
-        loading.style.display = 'none';
-        error.textContent = 'Error loading studio pottery requests: ' + err.message;
-        error.style.display = 'block';
-      }
-    }
-
-    async function setPotteryStatus(id, newStatus, btnElement) {
-      if (btnElement) btnElement.disabled = true;
-
-      try {
-        const res = await fetch(`/api/pottery/${id}/status`, {
-          method: 'PATCH',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ status: newStatus }),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          showNotification(`✓ Pottery request ${newStatus}.`, 'success', 'adminActionMessage');
-          loadAdminPottery();
-        } else {
-          showNotification(`⚠️ Could not update pottery request: ${data.error}`, 'error', 'adminActionMessage');
-        }
-      } catch (err) {
-        showNotification('Error updating pottery request: ' + err.message, 'error', 'adminActionMessage');
-      } finally {
-        if (btnElement) btnElement.disabled = false;
-      }
-    }
-
-    async function loadAdminBookings() {
-      const loading = document.getElementById('adminBookingsLoading');
-      const error = document.getElementById('adminBookingsError');
-      const empty = document.getElementById('adminBookingsEmpty');
-      const wrapper = document.getElementById('adminBookingsTableWrapper');
-      const tbody = document.getElementById('adminBookingsTbody');
-
-      loading.style.display = 'block';
-      error.style.display = 'none';
-      empty.style.display = 'none';
-      wrapper.style.display = 'none';
-      tbody.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/bookings', { headers: getAuthHeaders() });
-        const data = await res.json();
-        loading.style.display = 'none';
-
-        if (!res.ok) {
-          error.textContent = data.error || 'Failed to load studio bookings.';
-          error.style.display = 'block';
-          return;
-        }
-
-        if (!Array.isArray(data) || data.length === 0) {
-          empty.style.display = 'block';
-          return;
-        }
-
-        wrapper.style.display = 'block';
-        tbody.innerHTML = data.map(b => {
-          const customerEmail = b.customerId ? b.customerId.email : 'Unknown customer';
-          let decisionButtons = '-';
-
-          if (b.status === 'requested') {
-            decisionButtons = `
-              <div style="display:flex; gap:4px;">
-                <button class="btn btn-primary btn-sm" onclick="setBookingStatus('${b._id}', 'confirmed', this)">Confirm</button>
-                <button class="btn btn-danger btn-sm" onclick="setBookingStatus('${b._id}', 'declined', this)">Decline</button>
-              </div>
-            `;
-          }
-
-          return `
-            <tr>
-              <td><strong>${formatDate(b.date)}</strong></td>
-              <td>${escapeHtml(customerEmail)}</td>
-              <td>${b.size} sq ft</td>
-              <td>${escapeHtml(b.address)}</td>
-              <td>${currencySymbol}${b.price.toLocaleString()}</td>
-              <td><span class="status-tag ${b.status}">${b.status}</span></td>
-              <td>${decisionButtons}</td>
-            </tr>
-          `;
-        }).join('');
-
-      } catch (err) {
-        loading.style.display = 'none';
-        error.textContent = 'Error loading studio bookings: ' + err.message;
-        error.style.display = 'block';
-      }
-    }
-
-    async function setBookingStatus(id, newStatus, btnElement) {
-      if (btnElement) btnElement.disabled = true;
-
-      try {
-        const res = await fetch(`/api/bookings/${id}/status`, {
-          method: 'PATCH',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ status: newStatus }),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          showNotification(`✓ Booking status updated to ${newStatus}.`, 'success', 'adminActionMessage');
-          loadAdminBookings();
-        } else {
-          showNotification(`⚠️ Could not update status: ${data.error}`, 'error', 'adminActionMessage');
-        }
-      } catch (err) {
-        showNotification('Error updating booking: ' + err.message, 'error', 'adminActionMessage');
-      } finally {
-        if (btnElement) btnElement.disabled = false;
-      }
-    }
-
-    async function loadAdminOrders() {
-      const loading = document.getElementById('adminOrdersLoading');
-      const error = document.getElementById('adminOrdersError');
-      const empty = document.getElementById('adminOrdersEmpty');
-      const wrapper = document.getElementById('adminOrdersTableWrapper');
-      const tbody = document.getElementById('adminOrdersTbody');
-
-      loading.style.display = 'block';
-      error.style.display = 'none';
-      empty.style.display = 'none';
-      wrapper.style.display = 'none';
-      tbody.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/orders', { headers: getAuthHeaders() });
-        const data = await res.json();
-        loading.style.display = 'none';
-
-        if (!res.ok) {
-          error.textContent = data.error || 'Failed to load studio orders.';
-          error.style.display = 'block';
-          return;
-        }
-
-        if (!Array.isArray(data) || data.length === 0) {
-          empty.style.display = 'block';
-          return;
-        }
-
-        wrapper.style.display = 'block';
-        tbody.innerHTML = data.map(o => {
-          const title = o.paintingId ? o.paintingId.title : 'Archived Artwork';
-          const price = o.paintingId ? o.paintingId.price : '-';
-          const customerEmail = o.customerId ? o.customerId.email : 'Unknown customer';
-
-          return `
-            <tr>
-              <td><strong>${escapeHtml(title)}</strong></td>
-              <td>${escapeHtml(customerEmail)}</td>
-              <td>${currencySymbol}${typeof price === 'number' ? price.toLocaleString() : price}</td>
-              <td><span class="status-tag ${o.status}">${o.status}</span></td>
-              <td>${formatDate(o.createdAt)}</td>
-            </tr>
-          `;
-        }).join('');
-
-      } catch (err) {
-        loading.style.display = 'none';
-        error.textContent = 'Error loading studio orders: ' + err.message;
-        error.style.display = 'block';
-      }
-    }
-
-    async function handleAddPainting(e) {
-      e.preventDefault();
-      const msgBox = document.getElementById('adminActionMessage');
-      const btn = document.getElementById('btnAddPainting');
-
-      const title = document.getElementById('newPaintingTitle').value;
-      const artist = document.getElementById('newPaintingArtist').value;
-      const price = document.getElementById('newPaintingPrice').value;
-      const description = document.getElementById('newPaintingDesc').value;
-      const imageUrl = document.getElementById('newPaintingImage').value;
-
-      btn.disabled = true;
-      btn.textContent = 'Adding Artwork...';
-      msgBox.innerHTML = '';
-
-      try {
-        const res = await fetch('/api/paintings', {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({ title, artist, price, description, imageUrl }),
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-          msgBox.innerHTML = `<div class="status-box success">✓ Artwork "${data.painting.title}" added to Trail Studio!</div>`;
-          document.getElementById('adminAddPaintingForm').reset();
-          loadPaintings();
-        } else {
-          msgBox.innerHTML = `<div class="status-box error">⚠️ Failed to add painting: ${data.error}</div>`;
-        }
-      } catch (err) {
-        msgBox.innerHTML = `<div class="status-box error">Error adding painting: ${err.message}</div>`;
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Add to Trail Studio';
-      }
-    }
-
-    function formatDate(dateStr) {
-      if (!dateStr) return '-';
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
-      return d.toLocaleDateString('en-IN', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
-    }
-
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
-  </script>
+  <!-- Edit Painting Modal (Administrator) -->
+  <div id="editPaintingModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Painting Details</h3>
+        <button type="button" class="modal-close" onclick="closeModal('editPaintingModal')">&times;</button>
+      </div>
+      <form id="editPaintingForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="editTitle" class="form-label">Artwork Title</label>
+            <input type="text" id="editTitle" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="editArtist" class="form-label">Artist Name</label>
+            <input type="text" id="editArtist" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="editPrice" class="form-label">Price (INR)</label>
+            <input type="number" id="editPrice" class="form-control" min="1" required>
+          </div>
+          <div class="form-group">
+            <label for="editImageUrl" class="form-label">Image URL / Path</label>
+            <input type="text" id="editImageUrl" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="editDescription" class="form-label">Description &amp; Medium</label>
+            <textarea id="editDescription" class="form-control" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('editPaintingModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Pottery Modal (Customer) -->
+  <div id="editPotteryModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Pottery Commission</h3>
+        <button type="button" class="modal-close" onclick="closeModal('editPotteryModal')">&times;</button>
+      </div>
+      <form id="editPotteryForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="editPotteryItem" class="form-label">Vessel Shape</label>
+            <select id="editPotteryItem" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label for="editPotteryGlaze" class="form-label">Mineral Glaze</label>
+            <select id="editPotteryGlaze" class="form-control" required></select>
+          </div>
+          <div class="form-group">
+            <label for="editPotteryQuantity" class="form-label">Quantity (1 - 12)</label>
+            <input type="number" id="editPotteryQuantity" class="form-control" min="1" max="12" required>
+          </div>
+          <div class="form-group">
+            <label for="editPotteryNeededBy" class="form-label">Needed By Date (&ge; 14 days)</label>
+            <input type="date" id="editPotteryNeededBy" class="form-control" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('editPotteryModal')">Cancel</button>
+          <button type="submit" class="btn btn-forest">Update Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Minimalist Artisan Footer -->
+  <footer class="studio-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <h4>Trail Studio</h4>
+          <p>Preserving Indian folk arts, architectural murals, and handmade ceramics. Every piece carries centuries of living Indian cultural heritage.</p>
+        </div>
+        <div class="footer-col">
+          <h5>Studio Ateliers</h5>
+          <p>Jaipur Craft Quarter<br>Hyderabad Cultural District<br>India</p>
+        </div>
+        <div class="footer-col">
+          <h5>Visiting Hours</h5>
+          <p>Monday &ndash; Saturday<br>10:00 AM &ndash; 7:00 PM IST<br>Sunday by appointment</p>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>&copy; Trail Studio. All rights reserved.</div>
+        <div>Handcrafted Indian Heritage Art</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Script -->
+  <script src="app.js"></script>
 </body>
 </html>
