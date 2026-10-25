@@ -275,28 +275,9 @@ a:hover {
   max-width: 650px;
 }
 
-.tab-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 700;
-  color: var(--terracotta);
-  margin-bottom: 6px;
-}
-
-.tab-eyebrow .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--terracotta);
-}
-
 .tab-heading {
   font-family: var(--font-serif);
-  font-size: 2.1rem;
+  font-size: 2rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.2;
@@ -310,127 +291,14 @@ a:hover {
   line-height: 1.5;
 }
 
-/* Protocol / Lead Time Callout Box (Right Side of Banner) */
-.protocol-callout {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--terracotta);
-  border-radius: var(--radius-sm);
-  padding: 12px 18px;
-  max-width: 380px;
-  font-size: 0.82rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.protocol-callout.forest-edge {
-  border-left-color: var(--forest);
-}
-
-.protocol-callout-title {
-  font-weight: 700;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-main);
-  margin-bottom: 3px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.protocol-callout p {
-  color: var(--text-muted);
-  line-height: 1.45;
-}
-
 /* ==========================================================================
-   Two-Column Split Layout for Murals & Pottery Tabs
+   Centered Form Layout for Murals & Pottery Tabs
    ========================================================================== */
-.studio-split-grid {
-  display: grid;
-  grid-template-columns: 1fr 1.15fr;
-  gap: 32px;
-  align-items: start;
+.form-container {
+  max-width: 680px;
+  margin: 0 auto;
 }
 
-/* Left Column: Craft & Process Card */
-.craft-side-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 24px;
-  box-shadow: var(--shadow-sm);
-}
-
-.craft-side-card h3 {
-  font-family: var(--font-serif);
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 8px;
-}
-
-.craft-side-card p {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  line-height: 1.55;
-  margin-bottom: 18px;
-}
-
-/* Firing Timeline Stages */
-.timeline-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 18px 0;
-  position: relative;
-}
-
-.timeline-step {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  font-size: 0.85rem;
-}
-
-.step-num {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--bg-muted);
-  border: 1px solid var(--border-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.72rem;
-  font-weight: 700;
-  flex-shrink: 0;
-  color: var(--text-main);
-}
-
-.step-info strong {
-  display: block;
-  font-size: 0.88rem;
-  color: var(--text-main);
-}
-
-.step-info span {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.craft-quote {
-  border-top: 1px solid var(--border-light);
-  padding-top: 14px;
-  margin-top: 16px;
-  font-style: italic;
-  font-size: 0.84rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-}
-
-/* Right Column: Commission Form Card */
 .commission-form-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -1177,9 +1045,6 @@ textarea.form-control {
 
 /* Responsive Media Queries */
 @media (max-width: 900px) {
-  .studio-split-grid {
-    grid-template-columns: 1fr;
-  }
   .glaze-selection-grid {
     grid-template-columns: repeat(2, 1fr);
   }

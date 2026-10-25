@@ -657,7 +657,7 @@ async function handleMuralBookingSubmit(e) {
     const data = await res.json();
 
     if (res.ok) {
-      showToast('Wall mural commission request submitted successfully!', 'success');
+      showToast('Wall mural booking submitted successfully!', 'success');
       form.reset();
       calculateMuralEstimate();
       await loadCustomerDashboardData();
@@ -722,7 +722,7 @@ function updatePotterySummary() {
   const glazeObj = AppState.config.glazes.find((g) => g.id === glazeInput.value) || { name: 'Glaze' };
   const qty = qtyInput ? qtyInput.value : 1;
 
-  readout.textContent = `${qty}x ${itemObj.name} · ${glazeObj.name} · 14-day studio cycle`;
+  readout.textContent = `${qty}x ${itemObj.name} · ${glazeObj.name} · Min. 14 days delivery`;
 }
 
 // Quantity change listener
@@ -736,7 +736,7 @@ async function handlePotteryRequestSubmit(e) {
   e.preventDefault();
 
   if (!AppState.token) {
-    showToast('Please sign in as a customer to commission pottery.', 'info');
+    showToast('Please sign in as a customer to order pottery.', 'info');
     switchMainTab('auth');
     return;
   }
@@ -753,7 +753,7 @@ async function handlePotteryRequestSubmit(e) {
   const neededBy = form.potteryNeededBy.value;
 
   if (!itemId || !glazeId || !quantity || !neededBy) {
-    showToast('Please select silhouette, glaze, quantity, and needed date.', 'error');
+    showToast('Please select vessel, glaze, quantity, and needed date.', 'error');
     return;
   }
 
@@ -767,7 +767,7 @@ async function handlePotteryRequestSubmit(e) {
     const data = await res.json();
 
     if (res.ok) {
-      showToast('Custom pottery commission submitted successfully!', 'success');
+      showToast('Custom pottery request submitted successfully!', 'success');
       form.reset();
       selectPotteryItem('i-01', 'Kulhad (clay cup)');
       selectPotteryGlaze('g-01', 'Kumkum Red');
@@ -862,7 +862,7 @@ function renderCustomerBookings() {
   if (!tbody) return;
 
   if (!AppState.customerBookings || AppState.customerBookings.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No wall mural commissions booked yet.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No wall mural bookings yet.</td></tr>`;
     return;
   }
 
@@ -958,7 +958,7 @@ async function cancelOrder(orderId) {
 
 // Cancel Customer Booking
 async function cancelBooking(bookingId) {
-  if (!confirm('Cancel this wall mural commission? The reserved date will be released.')) {
+  if (!confirm('Cancel this wall mural booking? The reserved date will be released.')) {
     return;
   }
 
@@ -1167,7 +1167,7 @@ function renderAdminBookings() {
   if (!tbody) return;
 
   if (!AppState.adminBookings || AppState.adminBookings.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No mural commission bookings received.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No mural bookings received.</td></tr>`;
     return;
   }
 
