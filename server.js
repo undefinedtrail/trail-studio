@@ -62,6 +62,7 @@ app.get('/api/config', (req, res) => {
     currency: CURRENCY,
     potteryItems: POTTERY_ITEMS,
     glazes: GLAZES,
+    catalogPreview: Array.isArray(seedConfig.paintings) ? seedConfig.paintings : [],
   });
 });
 

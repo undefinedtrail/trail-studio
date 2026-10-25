@@ -1,36 +1,51 @@
 /**
- * Trail Studio — Frontend Application Logic
- * Vanilla JavaScript · Modular · Concurrency-Safe Client
+ * Trail Studio — Clean Tab-Based Frontend Logic
+ * Vanilla JavaScript · Modular · Concurrency Safe
  */
 
 // ============================================================================
 // 1. Application State
 // ============================================================================
 const AppState = {
+  activeTab: 'paintings', // 'paintings' | 'murals' | 'pottery' | 'activity' | 'admin' | 'auth'
   token: localStorage.getItem('trail_studio_token') || null,
   currentUser: null,
   config: {
     studioName: 'Trail Studio',
     ratePerSqFt: 150,
     currency: 'INR',
-    potteryItems: [],
-    glazes: [],
+    potteryItems: [
+      { id: 'i-01', name: 'Kulhad (clay cup)' },
+      { id: 'i-02', name: 'Surahi (water jug)' },
+      { id: 'i-03', name: 'Matka (water pot)' },
+      { id: 'i-04', name: 'Diya set' },
+      { id: 'i-05', name: 'Gamla (planter)' }
+    ],
+    glazes: [
+      { id: 'g-01', name: 'Kumkum Red' },
+      { id: 'g-02', name: 'Haldi Yellow' },
+      { id: 'g-03', name: 'Mehendi Green' },
+      { id: 'g-04', name: 'Indigo Blue' },
+      { id: 'g-05', name: 'Sandalwood Beige' },
+      { id: 'g-06', name: 'Charcoal Black' }
+    ],
+    catalogPreview: []
   },
   paintings: [],
   paintingFilter: 'all', // 'all' | 'available' | 'sold'
   
-  // Customer Data
+  // Customer Activity
   customerOrders: [],
   customerBookings: [],
   customerPottery: [],
 
-  // Admin Data
+  // Admin Records
   adminOrders: [],
   adminBookings: [],
   adminPottery: [],
 };
 
-// Initialize stored user safely
+// Safe session restoration
 try {
   const storedUser = localStorage.getItem('trail_studio_user');
   if (storedUser) {
@@ -41,7 +56,74 @@ try {
 }
 
 // ============================================================================
-// 2. Authentication & API Helpers
+// 2. Main Tab Switching Controller
+// ============================================================================
+function switchMainTab(tabName) {
+  // Guard access to protected tabs
+  if (tabName === 'activity') {
+    if (!AppState.token || !AppState.currentUser) {
+      showToast('Please sign in to view your activity and orders.', 'info');
+      switchMainTab('auth');
+      return;
+    }
+  }
+
+  if (tabName === 'admin') {
+    const isAdmin = AppState.currentUser && (AppState.currentUser.role === 'admin' || AppState.currentUser.role === 'studio');
+    if (!isAdmin) {
+      showToast('Administrator privileges required.', 'error');
+      switchMainTab('paintings');
+      return;
+    }
+  }
+
+  AppState.activeTab = tabName;
+
+  // 1. Update navigation tab buttons
+  document.querySelectorAll('.nav-tab-btn').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+
+  // 2. Hide all tab panels, show only target tab panel
+  document.querySelectorAll('.tab-panel').forEach((panel) => {
+    panel.classList.remove('active');
+  });
+
+  const targetPanel = document.getElementById(`tab-${tabName}`);
+  if (targetPanel) {
+    targetPanel.classList.add('active');
+  }
+
+  // 3. Update URL hash without forcing scroll jump
+  if (history.replaceState) {
+    history.replaceState(null, null, `#${tabName}`);
+  } else {
+    location.hash = `#${tabName}`;
+  }
+
+  // 4. Trigger data refresh for specific tabs
+  if (tabName === 'paintings') {
+    renderPaintings();
+  } else if (tabName === 'activity') {
+    loadCustomerDashboardData();
+  } else if (tabName === 'admin') {
+    loadAdminDashboardData();
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Handle browser Back / Forward buttons via hash change
+window.addEventListener('hashchange', () => {
+  const hash = location.hash.replace('#', '').trim();
+  const validTabs = ['paintings', 'murals', 'pottery', 'activity', 'admin', 'auth'];
+  if (validTabs.includes(hash) && hash !== AppState.activeTab) {
+    switchMainTab(hash);
+  }
+});
+
+// ============================================================================
+// 3. Authentication & API Helpers
 // ============================================================================
 function getAuthHeaders() {
   const headers = { 'Content-Type': 'application/json' };
@@ -57,21 +139,28 @@ function setSession(token, user) {
   localStorage.setItem('trail_studio_token', token);
   localStorage.setItem('trail_studio_user', JSON.stringify(user));
   updateNavigationUI();
-  showToast(`Welcome, ${user.email}!`, 'success');
+  showToast(`Welcome back, ${user.email}!`, 'success');
+
+  // Reload data with new session
   loadInitialData();
+
+  // If customer, switch to activity or paintings; if admin, to admin tab
+  if (user.role === 'admin' || user.role === 'studio') {
+    switchMainTab('admin');
+  } else {
+    switchMainTab('paintings');
+  }
 }
 
-function clearSession(notify = true) {
+function clearSession() {
   AppState.token = null;
   AppState.currentUser = null;
   localStorage.removeItem('trail_studio_token');
   localStorage.removeItem('trail_studio_user');
   updateNavigationUI();
   renderPaintings();
-  if (notify) {
-    showToast('Logged out successfully.', 'info');
-  }
-  showView('authSection');
+  showToast('Logged out successfully.', 'info');
+  switchMainTab('paintings');
 }
 
 async function verifyAuthSession() {
@@ -87,17 +176,47 @@ async function verifyAuthSession() {
       AppState.currentUser = data.user;
       localStorage.setItem('trail_studio_user', JSON.stringify(data.user));
     } else {
-      clearSession(false);
+      clearSession();
     }
   } catch (err) {
-    console.warn('Session verification error:', err.message);
+    console.warn('Session verification issue:', err.message);
   } finally {
     updateNavigationUI();
   }
 }
 
+function updateNavigationUI() {
+  const navAuthGuest = document.getElementById('navAuthGuest');
+  const navAuthUser = document.getElementById('navAuthUser');
+  const userEmailLabel = document.getElementById('userEmailLabel');
+  const userRoleBadge = document.getElementById('userRoleBadge');
+  const navBtnAdmin = document.getElementById('navBtnAdmin');
+  const adminAddPaintingBtn = document.getElementById('adminAddPaintingBtn');
+
+  const isAdmin = AppState.currentUser && (AppState.currentUser.role === 'admin' || AppState.currentUser.role === 'studio');
+
+  if (AppState.currentUser) {
+    if (navAuthGuest) navAuthGuest.style.display = 'none';
+    if (navAuthUser) navAuthUser.style.display = 'flex';
+    if (userEmailLabel) userEmailLabel.textContent = AppState.currentUser.email;
+
+    if (userRoleBadge) {
+      userRoleBadge.textContent = isAdmin ? 'Admin' : 'Customer';
+      userRoleBadge.className = `role-pill ${isAdmin ? 'role-admin' : 'role-customer'}`;
+    }
+
+    if (navBtnAdmin) navBtnAdmin.style.display = isAdmin ? 'inline-block' : 'none';
+    if (adminAddPaintingBtn) adminAddPaintingBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  } else {
+    if (navAuthGuest) navAuthGuest.style.display = 'block';
+    if (navAuthUser) navAuthUser.style.display = 'none';
+    if (navBtnAdmin) navBtnAdmin.style.display = 'none';
+    if (adminAddPaintingBtn) adminAddPaintingBtn.style.display = 'none';
+  }
+}
+
 // ============================================================================
-// 3. UI Helpers: Toasts, Modals & Formatters
+// 4. UI Feedback: Toasts, Modals & Formatters
 // ============================================================================
 function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
@@ -119,8 +238,8 @@ function showToast(message, type = 'info') {
   setTimeout(() => {
     if (toast.parentNode) {
       toast.style.opacity = '0';
-      toast.style.transition = 'opacity 0.3s ease';
-      setTimeout(() => toast.remove(), 300);
+      toast.style.transition = 'opacity 0.25s ease';
+      setTimeout(() => toast.remove(), 250);
     }
   }, 4000);
 }
@@ -156,11 +275,9 @@ function togglePasswordVisibility(inputId, btn) {
   if (input.type === 'password') {
     input.type = 'text';
     btn.innerHTML = '🙈';
-    btn.setAttribute('aria-label', 'Hide password');
   } else {
     input.type = 'password';
     btn.innerHTML = '👁️';
-    btn.setAttribute('aria-label', 'Show password');
   }
 }
 
@@ -174,72 +291,18 @@ function closeModal(modalId) {
   if (modal) modal.classList.remove('active');
 }
 
-// Global modal background click and Escape key listeners
+// Close modals on Escape key or backdrop click
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     document.querySelectorAll('.modal-overlay.active').forEach((m) => m.classList.remove('active'));
   }
 });
 
-// ============================================================================
-// 4. Navigation & View Controller
-// ============================================================================
-function updateNavigationUI() {
-  const navAuthGuest = document.getElementById('navAuthGuest');
-  const navAuthUser = document.getElementById('navAuthUser');
-  const userEmailLabel = document.getElementById('userEmailLabel');
-  const userRoleBadge = document.getElementById('userRoleBadge');
-  const customerDashboardLink = document.getElementById('customerDashboardLink');
-  const adminDashboardLink = document.getElementById('adminDashboardLink');
-  const authSection = document.getElementById('authSection');
-  const customerDashboardSection = document.getElementById('customerDashboardSection');
-  const adminDashboardSection = document.getElementById('adminDashboardSection');
-  const adminAddPaintingBtn = document.getElementById('adminAddPaintingBtn');
-
-  if (AppState.currentUser) {
-    if (navAuthGuest) navAuthGuest.style.display = 'none';
-    if (navAuthUser) navAuthUser.style.display = 'flex';
-    if (userEmailLabel) userEmailLabel.textContent = AppState.currentUser.email;
-
-    const isAdmin = AppState.currentUser.role === 'admin' || AppState.currentUser.role === 'studio';
-
-    if (userRoleBadge) {
-      userRoleBadge.textContent = isAdmin ? 'Administrator' : 'Customer';
-      userRoleBadge.className = `role-badge ${isAdmin ? 'role-admin' : 'role-customer'}`;
-    }
-
-    if (authSection) authSection.style.display = 'none';
-    if (adminAddPaintingBtn) adminAddPaintingBtn.style.display = isAdmin ? 'inline-block' : 'none';
-
-    if (isAdmin) {
-      if (adminDashboardLink) adminDashboardLink.style.display = 'inline-block';
-      if (customerDashboardLink) customerDashboardLink.style.display = 'none';
-      if (adminDashboardSection) adminDashboardSection.style.display = 'block';
-      if (customerDashboardSection) customerDashboardSection.style.display = 'none';
-    } else {
-      if (adminDashboardLink) adminDashboardLink.style.display = 'none';
-      if (customerDashboardLink) customerDashboardLink.style.display = 'inline-block';
-      if (adminDashboardSection) adminDashboardSection.style.display = 'none';
-      if (customerDashboardSection) customerDashboardSection.style.display = 'block';
-    }
-  } else {
-    if (navAuthGuest) navAuthGuest.style.display = 'flex';
-    if (navAuthUser) navAuthUser.style.display = 'none';
-    if (customerDashboardLink) customerDashboardLink.style.display = 'none';
-    if (adminDashboardLink) adminDashboardLink.style.display = 'none';
-    if (authSection) authSection.style.display = 'block';
-    if (customerDashboardSection) customerDashboardSection.style.display = 'none';
-    if (adminDashboardSection) adminDashboardSection.style.display = 'none';
-    if (adminAddPaintingBtn) adminAddPaintingBtn.style.display = 'none';
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('active');
   }
-}
-
-function showView(elementId) {
-  const el = document.getElementById(elementId);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth' });
-  }
-}
+});
 
 // ============================================================================
 // 5. Config & Initial Data Loading
@@ -248,17 +311,19 @@ async function loadConfig() {
   try {
     const res = await fetch('/api/config');
     if (res.ok) {
-      AppState.config = await res.json();
+      const data = await res.json();
+      AppState.config = { ...AppState.config, ...data };
       setupMuralFormConstraints();
-      setupPotteryFormOptions();
+      setupPotteryOptions();
     }
   } catch (err) {
-    console.error('Failed to load studio config:', err.message);
+    console.warn('Config load note:', err.message);
   }
 }
 
 async function loadInitialData() {
   await loadConfig();
+
   if (AppState.token) {
     await loadPaintings();
     if (AppState.currentUser) {
@@ -270,13 +335,25 @@ async function loadInitialData() {
       }
     }
   } else {
-    // Guest view: render placeholder / prompt
+    // When guest: if config has catalogPreview, use it for public browsing!
+    if (Array.isArray(AppState.config.catalogPreview) && AppState.config.catalogPreview.length > 0) {
+      AppState.paintings = AppState.config.catalogPreview.map((p) => ({
+        _id: p.id,
+        code: p.id,
+        title: p.title,
+        artist: p.artist,
+        price: p.price,
+        imageUrl: p.imageUrl,
+        isAvailable: p.status === 'available',
+        description: p.description
+      }));
+    }
     renderPaintings();
   }
 }
 
 // ============================================================================
-// 6. Paintings Gallery (Browse, Buy, Add, Edit)
+// 6. Tab 1: Paintings Gallery (Browse, Buy, Add, Edit)
 // ============================================================================
 async function loadPaintings() {
   if (!AppState.token) return;
@@ -287,7 +364,7 @@ async function loadPaintings() {
       AppState.paintings = await res.json();
       renderPaintings();
     } else if (res.status === 401) {
-      clearSession(false);
+      clearSession();
     }
   } catch (err) {
     console.error('Failed to load paintings:', err.message);
@@ -306,75 +383,67 @@ function renderPaintings() {
   const grid = document.getElementById('paintingsGrid');
   if (!grid) return;
 
-  if (!AppState.token) {
-    grid.innerHTML = `
-      <div class="empty-state" style="grid-column: 1 / -1;">
-        <div class="empty-state-icon">🎨</div>
-        <h4>Artisan Folk Art Collection</h4>
-        <p>Please sign in with your account to browse our full catalog of original Indian folk paintings and place purchase orders.</p>
-        <button class="btn btn-primary" style="margin-top: 14px;" onclick="showView('authSection')">Sign In to View Collection</button>
-      </div>
-    `;
-    return;
-  }
+  let list = AppState.paintings;
 
-  let filtered = AppState.paintings;
   if (AppState.paintingFilter === 'available') {
-    filtered = AppState.paintings.filter((p) => p.isAvailable);
+    list = list.filter((p) => p.isAvailable);
   } else if (AppState.paintingFilter === 'sold') {
-    filtered = AppState.paintings.filter((p) => !p.isAvailable);
+    list = list.filter((p) => !p.isAvailable);
   }
 
-  if (filtered.length === 0) {
+  if (list.length === 0) {
     grid.innerHTML = `
       <div class="empty-state" style="grid-column: 1 / -1;">
         <div class="empty-state-icon">🖼️</div>
-        <h4>No Paintings Found</h4>
-        <p>There are no paintings matching the selected status filter.</p>
+        <h4>No Paintings Match Filter</h4>
+        <p>Try switching to "All Works" to view the complete folk art collection.</p>
       </div>
     `;
     return;
   }
 
   const isAdmin = AppState.currentUser && (AppState.currentUser.role === 'admin' || AppState.currentUser.role === 'studio');
+  const isGuest = !AppState.token || !AppState.currentUser;
 
-  grid.innerHTML = filtered
-    .map((painting) => {
-      const isAvailable = painting.isAvailable;
-      const badgeClass = isAvailable ? 'badge-available' : 'badge-sold';
-      const badgeText = isAvailable ? 'Available' : 'Sold &amp; Archived';
+  grid.innerHTML = list
+    .map((p) => {
+      const isAvail = p.isAvailable;
+      const badgeClass = isAvail ? 'badge-available' : 'badge-sold';
+      const badgeText = isAvail ? 'Available' : 'Sold &amp; Archived';
 
       let actionHtml = '';
-      if (isAdmin) {
-        if (isAvailable) {
-          actionHtml = `<button class="btn btn-secondary btn-sm" onclick="openEditPaintingModal('${painting._id}')">Edit Details</button>`;
-        } else {
-          actionHtml = `<span class="status-pill status-declined">Sold (Locked)</span>`;
-        }
+
+      if (isGuest) {
+        actionHtml = isAvail
+          ? `<button type="button" class="btn btn-primary btn-sm" onclick="switchMainTab('auth')">Sign in to Purchase</button>`
+          : `<button type="button" class="btn btn-secondary btn-sm" disabled>Sold Out</button>`;
+      } else if (isAdmin) {
+        actionHtml = isAvail
+          ? `<button type="button" class="btn btn-secondary btn-sm" onclick="openEditPaintingModal('${p._id}')">Edit Details</button>`
+          : `<span class="status-pill status-declined">Sold (Locked)</span>`;
       } else {
-        if (isAvailable) {
-          actionHtml = `<button class="btn btn-primary btn-sm" onclick="buyPainting('${painting._id}', '${escapeHtml(painting.title)}')">Purchase Painting</button>`;
-        } else {
-          actionHtml = `<button class="btn btn-secondary btn-sm" disabled>Sold Out</button>`;
-        }
+        // Logged-in customer
+        actionHtml = isAvail
+          ? `<button type="button" class="btn btn-primary btn-sm" onclick="buyPainting('${p._id}', '${escapeHtml(p.title)}')">Purchase Painting</button>`
+          : `<button type="button" class="btn btn-secondary btn-sm" disabled>Sold Out</button>`;
       }
 
-      const imgPath = painting.imageUrl ? painting.imageUrl : 'images/p-001.jpg';
+      const imgPath = p.imageUrl ? p.imageUrl.replace(/^\//, '') : 'images/p-001.jpg';
 
       return `
-        <article class="painting-card" id="painting-${painting._id}">
-          <div class="painting-img-wrapper">
-            <img src="${escapeHtml(imgPath)}" alt="${escapeHtml(painting.title)}" class="painting-img" loading="lazy" onerror="this.src='images/p-001.jpg'">
-            <span class="painting-badge ${badgeClass}">${badgeText}</span>
+        <article class="artwork-card" id="card-${p._id}">
+          <div class="artwork-img-wrapper">
+            <img src="${escapeHtml(imgPath)}" alt="${escapeHtml(p.title)}" class="artwork-img" loading="lazy" onerror="this.src='images/p-001.jpg'">
+            <span class="artwork-badge ${badgeClass}">${badgeText}</span>
           </div>
-          <div class="painting-content">
-            <div class="painting-code">${escapeHtml(painting.code || 'ARTISAN PIECE')}</div>
-            <h3 class="painting-title">${escapeHtml(painting.title)}</h3>
-            <div class="painting-artist">By ${escapeHtml(painting.artist || 'Trail Studio Artist')}</div>
-            <p class="painting-desc">${escapeHtml(painting.description || 'Authentic handcrafted Indian traditional artwork.')}</p>
-            <div class="painting-footer">
-              <div class="painting-price">${formatPrice(painting.price)}</div>
-              <div class="painting-actions">${actionHtml}</div>
+          <div class="artwork-body">
+            <div class="artwork-code">${escapeHtml(p.code || 'FOLK ART')}</div>
+            <h3 class="artwork-title">${escapeHtml(p.title)}</h3>
+            <div class="artwork-artist">By ${escapeHtml(p.artist || 'Trail Studio Artist')}</div>
+            <p class="artwork-desc">${escapeHtml(p.description || 'Authentic traditional Indian artwork.')}</p>
+            <div class="artwork-footer">
+              <div class="artwork-price">${formatPrice(p.price)}</div>
+              <div>${actionHtml}</div>
             </div>
           </div>
         </article>
@@ -398,7 +467,7 @@ async function buyPainting(paintingId, paintingTitle) {
     const data = await res.json();
 
     if (res.ok) {
-      showToast(`Congratulations! You purchased "${paintingTitle}".`, 'success');
+      showToast(`Congratulations! You acquired "${paintingTitle}".`, 'success');
       await loadPaintings();
       await loadCustomerDashboardData();
     } else {
@@ -406,11 +475,11 @@ async function buyPainting(paintingId, paintingTitle) {
       await loadPaintings();
     }
   } catch (err) {
-    showToast('Network error during purchase: ' + err.message, 'error');
+    showToast('Purchase error: ' + err.message, 'error');
   }
 }
 
-// Add New Painting (Administrator Action)
+// Add Painting (Admin Action)
 function openAddPaintingModal() {
   document.getElementById('addPaintingForm').reset();
   openModal('addPaintingModal');
@@ -426,7 +495,7 @@ async function handleAddPaintingSubmit(e) {
   const description = form.description.value.trim();
 
   if (!title || !price || price <= 0) {
-    showToast('Please provide a valid title and positive price.', 'error');
+    showToast('Valid artwork title and price are required.', 'error');
     return;
   }
 
@@ -440,7 +509,7 @@ async function handleAddPaintingSubmit(e) {
     const data = await res.json();
 
     if (res.ok) {
-      showToast(`Painting "${title}" added successfully.`, 'success');
+      showToast(`Artwork "${title}" added to gallery.`, 'success');
       closeModal('addPaintingModal');
       form.reset();
       await loadPaintings();
@@ -453,20 +522,20 @@ async function handleAddPaintingSubmit(e) {
   }
 }
 
-// Edit Painting (Administrator Action)
+// Edit Painting (Admin Action)
 let currentEditPaintingId = null;
 
 function openEditPaintingModal(paintingId) {
-  const painting = AppState.paintings.find((p) => p._id === paintingId);
-  if (!painting) return;
+  const p = AppState.paintings.find((x) => x._id === paintingId);
+  if (!p) return;
 
   currentEditPaintingId = paintingId;
   const form = document.getElementById('editPaintingForm');
-  form.editTitle.value = painting.title;
-  form.editArtist.value = painting.artist || '';
-  form.editPrice.value = painting.price;
-  form.editImageUrl.value = painting.imageUrl || '';
-  form.editDescription.value = painting.description || '';
+  form.editTitle.value = p.title;
+  form.editArtist.value = p.artist || '';
+  form.editPrice.value = p.price;
+  form.editImageUrl.value = p.imageUrl || '';
+  form.editDescription.value = p.description || '';
 
   openModal('editPaintingModal');
 }
@@ -492,7 +561,7 @@ async function handleEditPaintingSubmit(e) {
     const data = await res.json();
 
     if (res.ok) {
-      showToast('Painting details updated successfully.', 'success');
+      showToast('Painting details updated.', 'success');
       closeModal('editPaintingModal');
       await loadPaintings();
       await loadAdminDashboardData();
@@ -505,16 +574,11 @@ async function handleEditPaintingSubmit(e) {
 }
 
 // ============================================================================
-// 7. Wall Mural Bookings Flow
+// 7. Tab 2: Wall Murals Booking Flow
 // ============================================================================
 function setupMuralFormConstraints() {
   const dateInput = document.getElementById('muralDate');
   const sizeInput = document.getElementById('muralSize');
-  const calcRateLabel = document.getElementById('calcRateLabel');
-
-  if (calcRateLabel) {
-    calcRateLabel.textContent = `₹${AppState.config.ratePerSqFt || 150} / sq ft`;
-  }
 
   if (dateInput) {
     const minD = new Date();
@@ -550,7 +614,7 @@ function calculateMuralEstimate() {
   } else {
     priceDisplay.textContent = '₹0';
     if (formulaDisplay) {
-      formulaDisplay.textContent = 'Please enter a size between 10 and 500 sq ft';
+      formulaDisplay.textContent = 'Enter wall size between 10 and 500 sq ft';
     }
   }
 }
@@ -559,8 +623,8 @@ async function handleMuralBookingSubmit(e) {
   e.preventDefault();
 
   if (!AppState.token) {
-    showToast('Please sign in as a customer to book a mural.', 'error');
-    showView('authSection');
+    showToast('Please sign in as a customer to book a mural.', 'info');
+    switchMainTab('auth');
     return;
   }
 
@@ -575,7 +639,7 @@ async function handleMuralBookingSubmit(e) {
   const address = form.muralAddress.value.trim();
 
   if (!date || !size || !address) {
-    showToast('Please fill out all booking fields.', 'error');
+    showToast('Please fill out all booking details.', 'error');
     return;
   }
 
@@ -593,7 +657,8 @@ async function handleMuralBookingSubmit(e) {
       form.reset();
       calculateMuralEstimate();
       await loadCustomerDashboardData();
-      showView('customerDashboardSection');
+      switchMainTab('activity');
+      switchCustomerSubtab('murals');
     } else {
       showToast(data.error || 'Failed to submit mural booking.', 'error');
     }
@@ -603,40 +668,72 @@ async function handleMuralBookingSubmit(e) {
 }
 
 // ============================================================================
-// 8. Custom Pottery Commission Flow
+// 8. Tab 3: Custom Pottery Flow (Visual Form Selection)
 // ============================================================================
-function setupPotteryFormOptions() {
-  const itemSelect = document.getElementById('potteryItemSelect');
-  const glazeSelect = document.getElementById('potteryGlazeSelect');
+function setupPotteryOptions() {
   const dateInput = document.getElementById('potteryNeededBy');
-
-  if (itemSelect && Array.isArray(AppState.config.potteryItems)) {
-    itemSelect.innerHTML = `
-      <option value="">Select Handcrafted Shape...</option>
-      ${AppState.config.potteryItems.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`).join('')}
-    `;
-  }
-
-  if (glazeSelect && Array.isArray(AppState.config.glazes)) {
-    glazeSelect.innerHTML = `
-      <option value="">Select Natural Mineral Glaze...</option>
-      ${AppState.config.glazes.map((glaze) => `<option value="${escapeHtml(glaze.id)}">${escapeHtml(glaze.name)}</option>`).join('')}
-    `;
-  }
-
   if (dateInput) {
     const minD = new Date();
     minD.setDate(minD.getDate() + 14);
     dateInput.min = minD.toISOString().split('T')[0];
   }
+  updatePotterySummary();
 }
+
+function selectPotteryItem(itemId, itemName) {
+  const input = document.getElementById('selectedPotteryItem');
+  const label = document.getElementById('selectedItemLabel');
+  if (input) input.value = itemId;
+  if (label) label.textContent = itemName;
+
+  document.querySelectorAll('.item-select-btn').forEach((btn) => {
+    btn.classList.toggle('selected', btn.dataset.id === itemId);
+  });
+
+  updatePotterySummary();
+}
+
+function selectPotteryGlaze(glazeId, glazeName) {
+  const input = document.getElementById('selectedPotteryGlaze');
+  const label = document.getElementById('selectedGlazeLabel');
+  if (input) input.value = glazeId;
+  if (label) label.textContent = glazeName;
+
+  document.querySelectorAll('.glaze-select-btn').forEach((btn) => {
+    btn.classList.toggle('selected', btn.dataset.id === glazeId);
+  });
+
+  updatePotterySummary();
+}
+
+function updatePotterySummary() {
+  const readout = document.getElementById('potterySummaryReadout');
+  const itemInput = document.getElementById('selectedPotteryItem');
+  const glazeInput = document.getElementById('selectedPotteryGlaze');
+  const qtyInput = document.getElementById('potteryQuantity');
+
+  if (!readout || !itemInput || !glazeInput) return;
+
+  const itemObj = AppState.config.potteryItems.find((i) => i.id === itemInput.value) || { name: 'Vessel' };
+  const glazeObj = AppState.config.glazes.find((g) => g.id === glazeInput.value) || { name: 'Glaze' };
+  const qty = qtyInput ? qtyInput.value : 1;
+
+  readout.textContent = `${qty}x ${itemObj.name} · ${glazeObj.name} · 14-day studio cycle`;
+}
+
+// Quantity change listener
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'potteryQuantity') {
+    updatePotterySummary();
+  }
+});
 
 async function handlePotteryRequestSubmit(e) {
   e.preventDefault();
 
   if (!AppState.token) {
-    showToast('Please sign in as a customer to commission pottery.', 'error');
-    showView('authSection');
+    showToast('Please sign in as a customer to commission pottery.', 'info');
+    switchMainTab('auth');
     return;
   }
 
@@ -646,13 +743,13 @@ async function handlePotteryRequestSubmit(e) {
   }
 
   const form = e.target;
-  const itemId = form.potteryItemSelect.value;
-  const glazeId = form.potteryGlazeSelect.value;
+  const itemId = document.getElementById('selectedPotteryItem').value;
+  const glazeId = document.getElementById('selectedPotteryGlaze').value;
   const quantity = Number(form.potteryQuantity.value);
   const neededBy = form.potteryNeededBy.value;
 
   if (!itemId || !glazeId || !quantity || !neededBy) {
-    showToast('Please fill out all pottery commission details.', 'error');
+    showToast('Please select silhouette, glaze, quantity, and needed date.', 'error');
     return;
   }
 
@@ -666,10 +763,13 @@ async function handlePotteryRequestSubmit(e) {
     const data = await res.json();
 
     if (res.ok) {
-      showToast('Custom pottery commission request created successfully!', 'success');
+      showToast('Custom pottery commission submitted successfully!', 'success');
       form.reset();
+      selectPotteryItem('i-01', 'Kulhad (clay cup)');
+      selectPotteryGlaze('g-01', 'Kumkum Red');
       await loadCustomerDashboardData();
-      showView('customerDashboardSection');
+      switchMainTab('activity');
+      switchCustomerSubtab('pottery');
     } else {
       showToast(data.error || 'Failed to submit pottery request.', 'error');
     }
@@ -679,8 +779,21 @@ async function handlePotteryRequestSubmit(e) {
 }
 
 // ============================================================================
-// 9. Customer Dashboard Operations
+// 9. Tab 4: My Activity Controller (Subtab Switching & Table Rendering)
 // ============================================================================
+function switchCustomerSubtab(subtabName) {
+  ['orders', 'murals', 'pottery'].forEach((s) => {
+    const content = document.getElementById(`subtabContent${capitalize(s)}`);
+    const btn = document.getElementById(`subtabBtn${capitalize(s)}`);
+    if (content) content.style.display = s === subtabName ? 'block' : 'none';
+    if (btn) btn.classList.toggle('active', s === subtabName);
+  });
+}
+
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 async function loadCustomerDashboardData() {
   if (!AppState.token || (AppState.currentUser && AppState.currentUser.role !== 'customer')) {
     return;
@@ -697,120 +810,104 @@ async function loadCustomerDashboardData() {
     if (bookingsRes.ok) AppState.customerBookings = await bookingsRes.json();
     if (potteryRes.ok) AppState.customerPottery = await potteryRes.json();
 
-    renderCustomerDashboard();
+    renderCustomerOrders();
+    renderCustomerBookings();
+    renderCustomerPottery();
   } catch (err) {
-    console.error('Failed to load customer dashboard data:', err.message);
+    console.error('Customer activity error:', err.message);
   }
 }
 
-function renderCustomerDashboard() {
-  renderCustomerOrdersTable();
-  renderCustomerBookingsTable();
-  renderCustomerPotteryTable();
-}
-
-function renderCustomerOrdersTable() {
-  const container = document.getElementById('custOrdersTableBody');
-  if (!container) return;
+function renderCustomerOrders() {
+  const tbody = document.getElementById('custOrdersTableBody');
+  if (!tbody) return;
 
   if (!AppState.customerOrders || AppState.customerOrders.length === 0) {
-    container.innerHTML = `
-      <tr>
-        <td colspan="5" class="empty-state">You have not purchased any paintings yet.</td>
-      </tr>
-    `;
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No painting orders placed yet.</td></tr>`;
     return;
   }
 
-  container.innerHTML = AppState.customerOrders
-    .map((order) => {
-      const painting = order.paintingId || {};
-      const isPlaced = order.status === 'placed';
+  tbody.innerHTML = AppState.customerOrders
+    .map((o) => {
+      const p = o.paintingId || {};
+      const isPlaced = o.status === 'placed';
       const statusPill = isPlaced
         ? '<span class="status-pill status-placed">Placed</span>'
         : '<span class="status-pill status-cancelled">Cancelled</span>';
 
-      const actionBtn = isPlaced
-        ? `<button class="btn btn-danger btn-sm" onclick="cancelOrder('${order._id}')">Cancel Order</button>`
-        : '<span style="color: var(--color-text-muted); font-size: 0.8rem;">No Actions</span>';
+      const action = isPlaced
+        ? `<button type="button" class="btn btn-danger btn-sm" onclick="cancelOrder('${o._id}')">Cancel Order</button>`
+        : '<span style="color: var(--text-muted); font-size: 0.8rem;">None</span>';
 
       return `
         <tr>
-          <td><strong>${escapeHtml(painting.title || 'Painting')}</strong><div style="font-size: 0.75rem; color: var(--color-text-muted);">${escapeHtml(painting.code || '')}</div></td>
-          <td>${escapeHtml(painting.artist || 'Trail Studio Artist')}</td>
-          <td>${formatPrice(painting.price)}</td>
-          <td>${formatDate(order.createdAt)}</td>
+          <td><strong>${escapeHtml(p.title || 'Original Artwork')}</strong><div style="font-size: 0.72rem; color: var(--text-muted);">${escapeHtml(p.code || '')}</div></td>
+          <td>${escapeHtml(p.artist || 'Trail Studio Artist')}</td>
+          <td>${formatPrice(p.price)}</td>
+          <td>${formatDate(o.createdAt)}</td>
           <td>${statusPill}</td>
-          <td>${actionBtn}</td>
+          <td>${action}</td>
         </tr>
       `;
     })
     .join('');
 }
 
-function renderCustomerBookingsTable() {
-  const container = document.getElementById('custBookingsTableBody');
-  if (!container) return;
+function renderCustomerBookings() {
+  const tbody = document.getElementById('custBookingsTableBody');
+  if (!tbody) return;
 
   if (!AppState.customerBookings || AppState.customerBookings.length === 0) {
-    container.innerHTML = `
-      <tr>
-        <td colspan="6" class="empty-state">No wall mural commissions booked yet.</td>
-      </tr>
-    `;
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No wall mural commissions booked yet.</td></tr>`;
     return;
   }
 
-  container.innerHTML = AppState.customerBookings
-    .map((booking) => {
-      const status = booking.status;
-      let statusPill = `<span class="status-pill status-${status}">${status}</span>`;
-
+  tbody.innerHTML = AppState.customerBookings
+    .map((b) => {
+      const status = b.status;
+      const statusPill = `<span class="status-pill status-${status}">${status}</span>`;
       const canCancel = status === 'requested' || status === 'confirmed';
-      const actionBtn = canCancel
-        ? `<button class="btn btn-danger btn-sm" onclick="cancelBooking('${booking._id}')">Cancel Booking</button>`
-        : '<span style="color: var(--color-text-muted); font-size: 0.8rem;">Locked</span>';
+
+      const action = canCancel
+        ? `<button type="button" class="btn btn-danger btn-sm" onclick="cancelBooking('${b._id}')">Cancel</button>`
+        : '<span style="color: var(--text-muted); font-size: 0.8rem;">Locked</span>';
 
       return `
         <tr>
-          <td><strong>${formatDate(booking.date)}</strong></td>
-          <td>${booking.size} sq ft</td>
-          <td>${formatPrice(booking.price)}</td>
-          <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(booking.address)}">${escapeHtml(booking.address)}</td>
+          <td><strong>${formatDate(b.date)}</strong></td>
+          <td>${b.size} sq ft</td>
+          <td>${formatPrice(b.price)}</td>
+          <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(b.address)}">${escapeHtml(b.address)}</td>
           <td>${statusPill}</td>
-          <td>${actionBtn}</td>
+          <td>${action}</td>
         </tr>
       `;
     })
     .join('');
 }
 
-function renderCustomerPotteryTable() {
-  const container = document.getElementById('custPotteryTableBody');
-  if (!container) return;
+function renderCustomerPottery() {
+  const tbody = document.getElementById('custPotteryTableBody');
+  if (!tbody) return;
 
   if (!AppState.customerPottery || AppState.customerPottery.length === 0) {
-    container.innerHTML = `
-      <tr>
-        <td colspan="6" class="empty-state">No custom pottery requests placed yet.</td>
-      </tr>
-    `;
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No custom pottery requests submitted yet.</td></tr>`;
     return;
   }
 
-  container.innerHTML = AppState.customerPottery
+  tbody.innerHTML = AppState.customerPottery
     .map((req) => {
-      const itemObj = (AppState.config.potteryItems || []).find((i) => i.id === req.itemId) || { name: req.itemId };
-      const glazeObj = (AppState.config.glazes || []).find((g) => g.id === req.glazeId) || { name: req.glazeId };
+      const itemObj = AppState.config.potteryItems.find((i) => i.id === req.itemId) || { name: req.itemId };
+      const glazeObj = AppState.config.glazes.find((g) => g.id === req.glazeId) || { name: req.glazeId };
       const status = req.status;
       const statusPill = `<span class="status-pill status-${status}">${status}</span>`;
 
-      let actions = '<span style="color: var(--color-text-muted); font-size: 0.8rem;">Locked</span>';
+      let action = '<span style="color: var(--text-muted); font-size: 0.8rem;">Locked</span>';
       if (status === 'requested') {
-        actions = `
+        action = `
           <div style="display: flex; gap: 6px;">
-            <button class="btn btn-secondary btn-sm" onclick="openEditPotteryModal('${req._id}')">Edit</button>
-            <button class="btn btn-danger btn-sm" onclick="cancelPotteryRequest('${req._id}')">Cancel</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="openEditPotteryModal('${req._id}')">Edit</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="cancelPotteryRequest('${req._id}')">Cancel</button>
           </div>
         `;
       }
@@ -822,7 +919,7 @@ function renderCustomerPotteryTable() {
           <td>${req.quantity} pcs</td>
           <td>${formatDate(req.neededBy)}</td>
           <td>${statusPill}</td>
-          <td>${actions}</td>
+          <td>${action}</td>
         </tr>
       `;
     })
@@ -831,7 +928,7 @@ function renderCustomerPotteryTable() {
 
 // Cancel Customer Order
 async function cancelOrder(orderId) {
-  if (!confirm('Are you sure you want to cancel this painting purchase? The artwork will become available for others to buy.')) {
+  if (!confirm('Cancel this painting purchase? The artwork will immediately become available again for others to acquire.')) {
     return;
   }
 
@@ -844,7 +941,7 @@ async function cancelOrder(orderId) {
     const data = await res.json();
 
     if (res.ok) {
-      showToast('Order cancelled successfully. Painting returned to available stock.', 'success');
+      showToast('Order cancelled. Artwork returned to available stock.', 'success');
       await loadPaintings();
       await loadCustomerDashboardData();
     } else {
@@ -857,7 +954,7 @@ async function cancelOrder(orderId) {
 
 // Cancel Customer Booking
 async function cancelBooking(bookingId) {
-  if (!confirm('Cancel this mural booking? The calendar date will be released.')) {
+  if (!confirm('Cancel this wall mural commission? The reserved date will be released.')) {
     return;
   }
 
@@ -870,7 +967,7 @@ async function cancelBooking(bookingId) {
     const data = await res.json();
 
     if (res.ok) {
-      showToast('Mural booking cancelled.', 'info');
+      showToast('Mural booking cancelled and date released.', 'info');
       await loadCustomerDashboardData();
     } else {
       showToast(data.error || 'Failed to cancel booking.', 'error');
@@ -880,9 +977,9 @@ async function cancelBooking(bookingId) {
   }
 }
 
-// Cancel Customer Pottery Request
+// Cancel Customer Pottery
 async function cancelPotteryRequest(potteryId) {
-  if (!confirm('Cancel this custom pottery commission request?')) {
+  if (!confirm('Cancel this custom pottery request?')) {
     return;
   }
 
@@ -895,7 +992,7 @@ async function cancelPotteryRequest(potteryId) {
     const data = await res.json();
 
     if (res.ok) {
-      showToast('Pottery commission request cancelled.', 'info');
+      showToast('Pottery request cancelled.', 'info');
       await loadCustomerDashboardData();
     } else {
       showToast(data.error || 'Failed to cancel pottery request.', 'error');
@@ -905,7 +1002,7 @@ async function cancelPotteryRequest(potteryId) {
   }
 }
 
-// Edit Customer Pottery Request
+// Edit Customer Pottery
 let currentEditPotteryId = null;
 
 function openEditPotteryModal(potteryId) {
@@ -914,13 +1011,12 @@ function openEditPotteryModal(potteryId) {
 
   currentEditPotteryId = potteryId;
   const form = document.getElementById('editPotteryForm');
-  
-  // Populate edit selects
-  form.editPotteryItem.innerHTML = (AppState.config.potteryItems || []).map((i) => `
+
+  form.editPotteryItem.innerHTML = AppState.config.potteryItems.map((i) => `
     <option value="${escapeHtml(i.id)}" ${i.id === req.itemId ? 'selected' : ''}>${escapeHtml(i.name)}</option>
   `).join('');
 
-  form.editPotteryGlaze.innerHTML = (AppState.config.glazes || []).map((g) => `
+  form.editPotteryGlaze.innerHTML = AppState.config.glazes.map((g) => `
     <option value="${escapeHtml(g.id)}" ${g.id === req.glazeId ? 'selected' : ''}>${escapeHtml(g.name)}</option>
   `).join('');
 
@@ -956,7 +1052,7 @@ async function handleEditPotterySubmit(e) {
     const data = await res.json();
 
     if (res.ok) {
-      showToast('Pottery commission request updated.', 'success');
+      showToast('Pottery request updated.', 'success');
       closeModal('editPotteryModal');
       await loadCustomerDashboardData();
     } else {
@@ -968,8 +1064,17 @@ async function handleEditPotterySubmit(e) {
 }
 
 // ============================================================================
-// 10. Administrator Dashboard Operations
+// 10. Tab 5: Studio Admin Dashboard (Subtab Switching & Table Rendering)
 // ============================================================================
+function switchAdminSubtab(subtabName) {
+  ['inventory', 'orders', 'murals', 'pottery'].forEach((s) => {
+    const content = document.getElementById(`adminSubtabContent${capitalize(s)}`);
+    const btn = document.getElementById(`adminSubtabBtn${capitalize(s)}`);
+    if (content) content.style.display = s === subtabName ? 'block' : 'none';
+    if (btn) btn.classList.toggle('active', s === subtabName);
+  });
+}
+
 async function loadAdminDashboardData() {
   if (!AppState.token || !AppState.currentUser || (AppState.currentUser.role !== 'admin' && AppState.currentUser.role !== 'studio')) {
     return;
@@ -986,45 +1091,66 @@ async function loadAdminDashboardData() {
     if (bookingsRes.ok) AppState.adminBookings = await bookingsRes.json();
     if (potteryRes.ok) AppState.adminPottery = await potteryRes.json();
 
-    renderAdminDashboard();
+    renderAdminInventory();
+    renderAdminOrders();
+    renderAdminBookings();
+    renderAdminPottery();
   } catch (err) {
-    console.error('Failed to load administrator data:', err.message);
+    console.error('Admin data error:', err.message);
   }
 }
 
-function renderAdminDashboard() {
-  renderAdminOrdersTable();
-  renderAdminBookingsTable();
-  renderAdminPotteryTable();
+function renderAdminInventory() {
+  const tbody = document.getElementById('adminInventoryTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = AppState.paintings
+    .map((p) => {
+      const isAvail = p.isAvailable;
+      const statusPill = isAvail
+        ? '<span class="status-pill status-placed">Available</span>'
+        : '<span class="status-pill status-cancelled">Sold &amp; Archived</span>';
+
+      const action = isAvail
+        ? `<button type="button" class="btn btn-secondary btn-sm" onclick="openEditPaintingModal('${p._id}')">Edit</button>`
+        : '<span style="color: var(--text-muted); font-size: 0.8rem;">Locked</span>';
+
+      return `
+        <tr>
+          <td><strong>${escapeHtml(p.title)}</strong><div style="font-size: 0.72rem; color: var(--text-muted);">${escapeHtml(p.code || '')}</div></td>
+          <td>${escapeHtml(p.artist || 'Trail Studio Artist')}</td>
+          <td>${formatPrice(p.price)}</td>
+          <td>${statusPill}</td>
+          <td>${action}</td>
+        </tr>
+      `;
+    })
+    .join('');
 }
 
-function renderAdminOrdersTable() {
-  const container = document.getElementById('adminOrdersTableBody');
-  if (!container) return;
+function renderAdminOrders() {
+  const tbody = document.getElementById('adminOrdersTableBody');
+  if (!tbody) return;
 
   if (!AppState.adminOrders || AppState.adminOrders.length === 0) {
-    container.innerHTML = `
-      <tr>
-        <td colspan="6" class="empty-state">No customer painting orders recorded.</td>
-      </tr>
-    `;
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No customer orders recorded.</td></tr>`;
     return;
   }
 
-  container.innerHTML = AppState.adminOrders
-    .map((order) => {
-      const painting = order.paintingId || {};
-      const customer = order.customerId || {};
-      const statusPill = order.status === 'placed'
+  tbody.innerHTML = AppState.adminOrders
+    .map((o) => {
+      const p = o.paintingId || {};
+      const c = o.customerId || {};
+      const statusPill = o.status === 'placed'
         ? '<span class="status-pill status-placed">Placed</span>'
         : '<span class="status-pill status-cancelled">Cancelled</span>';
 
       return `
         <tr>
-          <td><strong>${escapeHtml(painting.title || 'Untitled')}</strong></td>
-          <td>${escapeHtml(customer.email || 'Customer')}</td>
-          <td>${formatPrice(painting.price)}</td>
-          <td>${formatDate(order.createdAt)}</td>
+          <td><strong>${escapeHtml(p.title || 'Painting')}</strong></td>
+          <td>${escapeHtml(c.email || 'Customer')}</td>
+          <td>${formatPrice(p.price)}</td>
+          <td>${formatDate(o.createdAt)}</td>
           <td>${statusPill}</td>
         </tr>
       `;
@@ -1032,31 +1158,27 @@ function renderAdminOrdersTable() {
     .join('');
 }
 
-function renderAdminBookingsTable() {
-  const container = document.getElementById('adminBookingsTableBody');
-  if (!container) return;
+function renderAdminBookings() {
+  const tbody = document.getElementById('adminBookingsTableBody');
+  if (!tbody) return;
 
   if (!AppState.adminBookings || AppState.adminBookings.length === 0) {
-    container.innerHTML = `
-      <tr>
-        <td colspan="7" class="empty-state">No mural commission bookings received.</td>
-      </tr>
-    `;
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No mural commission bookings received.</td></tr>`;
     return;
   }
 
-  container.innerHTML = AppState.adminBookings
+  tbody.innerHTML = AppState.adminBookings
     .map((b) => {
-      const customer = b.customerId || {};
+      const c = b.customerId || {};
       const status = b.status;
       const statusPill = `<span class="status-pill status-${status}">${status}</span>`;
 
-      let actions = '<span style="color: var(--color-text-muted); font-size: 0.8rem;">Decided</span>';
+      let decision = '<span style="color: var(--text-muted); font-size: 0.8rem;">Decided</span>';
       if (status === 'requested') {
-        actions = `
+        decision = `
           <div style="display: flex; gap: 6px;">
-            <button class="btn btn-forest btn-sm" onclick="setBookingStatus('${b._id}', 'confirmed')">Confirm</button>
-            <button class="btn btn-danger btn-sm" onclick="setBookingStatus('${b._id}', 'declined')">Decline</button>
+            <button type="button" class="btn btn-forest btn-sm" onclick="setBookingStatus('${b._id}', 'confirmed')">Confirm</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="setBookingStatus('${b._id}', 'declined')">Decline</button>
           </div>
         `;
       }
@@ -1064,45 +1186,41 @@ function renderAdminBookingsTable() {
       return `
         <tr>
           <td><strong>${formatDate(b.date)}</strong></td>
-          <td>${escapeHtml(customer.email || 'Customer')}</td>
+          <td>${escapeHtml(c.email || 'Customer')}</td>
           <td>${b.size} sq ft</td>
           <td>${formatPrice(b.price)}</td>
           <td style="max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(b.address)}">${escapeHtml(b.address)}</td>
           <td>${statusPill}</td>
-          <td>${actions}</td>
+          <td>${decision}</td>
         </tr>
       `;
     })
     .join('');
 }
 
-function renderAdminPotteryTable() {
-  const container = document.getElementById('adminPotteryTableBody');
-  if (!container) return;
+function renderAdminPottery() {
+  const tbody = document.getElementById('adminPotteryTableBody');
+  if (!tbody) return;
 
   if (!AppState.adminPottery || AppState.adminPottery.length === 0) {
-    container.innerHTML = `
-      <tr>
-        <td colspan="7" class="empty-state">No custom pottery commission requests received.</td>
-      </tr>
-    `;
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No custom pottery requests received.</td></tr>`;
     return;
   }
 
-  container.innerHTML = AppState.adminPottery
+  tbody.innerHTML = AppState.adminPottery
     .map((p) => {
-      const customer = p.customerId || {};
-      const itemObj = (AppState.config.potteryItems || []).find((i) => i.id === p.itemId) || { name: p.itemId };
-      const glazeObj = (AppState.config.glazes || []).find((g) => g.id === p.glazeId) || { name: p.glazeId };
+      const c = p.customerId || {};
+      const itemObj = AppState.config.potteryItems.find((i) => i.id === p.itemId) || { name: p.itemId };
+      const glazeObj = AppState.config.glazes.find((g) => g.id === p.glazeId) || { name: p.glazeId };
       const status = p.status;
       const statusPill = `<span class="status-pill status-${status}">${status}</span>`;
 
-      let actions = '<span style="color: var(--color-text-muted); font-size: 0.8rem;">Decided</span>';
+      let decision = '<span style="color: var(--text-muted); font-size: 0.8rem;">Decided</span>';
       if (status === 'requested') {
-        actions = `
+        decision = `
           <div style="display: flex; gap: 6px;">
-            <button class="btn btn-forest btn-sm" onclick="setPotteryStatus('${p._id}', 'accepted')">Accept</button>
-            <button class="btn btn-danger btn-sm" onclick="setPotteryStatus('${p._id}', 'declined')">Decline</button>
+            <button type="button" class="btn btn-forest btn-sm" onclick="setPotteryStatus('${p._id}', 'accepted')">Accept</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="setPotteryStatus('${p._id}', 'declined')">Decline</button>
           </div>
         `;
       }
@@ -1111,11 +1229,11 @@ function renderAdminPotteryTable() {
         <tr>
           <td><strong>${escapeHtml(itemObj.name)}</strong></td>
           <td>${escapeHtml(glazeObj.name)}</td>
-          <td>${escapeHtml(customer.email || 'Customer')}</td>
+          <td>${escapeHtml(c.email || 'Customer')}</td>
           <td>${p.quantity} pcs</td>
           <td>${formatDate(p.neededBy)}</td>
           <td>${statusPill}</td>
-          <td>${actions}</td>
+          <td>${decision}</td>
         </tr>
       `;
     })
@@ -1165,24 +1283,24 @@ async function setPotteryStatus(potteryId, status) {
 }
 
 // ============================================================================
-// 11. Authentication Event Handlers
+// 11. Tab 6: Authentication Form Handlers
 // ============================================================================
 function switchAuthTab(tab) {
-  const loginForm = document.getElementById('loginFormContainer');
-  const registerForm = document.getElementById('registerFormContainer');
-  const tabLogin = document.getElementById('authTabLogin');
-  const tabRegister = document.getElementById('authTabRegister');
+  const loginWrap = document.getElementById('authLoginFormWrap');
+  const registerWrap = document.getElementById('authRegisterFormWrap');
+  const btnLogin = document.getElementById('authTabBtnLogin');
+  const btnRegister = document.getElementById('authTabBtnRegister');
 
   if (tab === 'login') {
-    if (loginForm) loginForm.style.display = 'block';
-    if (registerForm) registerForm.style.display = 'none';
-    if (tabLogin) tabLogin.classList.add('active');
-    if (tabRegister) tabRegister.classList.remove('active');
+    if (loginWrap) loginWrap.style.display = 'block';
+    if (registerWrap) registerWrap.style.display = 'none';
+    if (btnLogin) btnLogin.classList.add('active');
+    if (btnRegister) btnRegister.classList.remove('active');
   } else {
-    if (loginForm) loginForm.style.display = 'none';
-    if (registerForm) registerForm.style.display = 'block';
-    if (tabLogin) tabLogin.classList.remove('active');
-    if (tabRegister) tabRegister.classList.add('active');
+    if (loginWrap) loginWrap.style.display = 'none';
+    if (registerWrap) registerWrap.style.display = 'block';
+    if (btnLogin) btnLogin.classList.remove('active');
+    if (btnRegister) btnRegister.classList.add('active');
   }
 }
 
@@ -1193,7 +1311,7 @@ async function handleLoginSubmit(e) {
   const password = form.loginPassword.value;
 
   if (!email || !password) {
-    showToast('Please enter both email and password.', 'error');
+    showToast('Email and password are required.', 'error');
     return;
   }
 
@@ -1210,10 +1328,10 @@ async function handleLoginSubmit(e) {
       setSession(data.token, data.user);
       form.reset();
     } else {
-      showToast(data.error || 'Login failed. Please check your credentials.', 'error');
+      showToast(data.error || 'Invalid credentials.', 'error');
     }
   } catch (err) {
-    showToast('Network error during login: ' + err.message, 'error');
+    showToast('Login error: ' + err.message, 'error');
   }
 }
 
@@ -1225,7 +1343,7 @@ async function handleRegisterSubmit(e) {
   const confirm = form.regPasswordConfirm.value;
 
   if (!email || !password) {
-    showToast('Please enter email and password.', 'error');
+    showToast('All fields are required.', 'error');
     return;
   }
 
@@ -1251,44 +1369,32 @@ async function handleRegisterSubmit(e) {
     if (res.ok) {
       setSession(data.token, data.user);
       form.reset();
-      showToast('Account created successfully!', 'success');
+      showToast('Account registered successfully!', 'success');
     } else {
       showToast(data.error || 'Registration failed.', 'error');
     }
   } catch (err) {
-    showToast('Network error during registration: ' + err.message, 'error');
+    showToast('Registration error: ' + err.message, 'error');
   }
 }
 
 // ============================================================================
-// 12. Tab Switchers for Dashboards
-// ============================================================================
-function switchCustomerTab(tabName) {
-  ['custOrders', 'custBookings', 'custPottery'].forEach((t) => {
-    const content = document.getElementById(`${t}Content`);
-    const tabBtn = document.getElementById(`${t}TabBtn`);
-    if (content) content.style.display = t === tabName ? 'block' : 'none';
-    if (tabBtn) tabBtn.classList.toggle('active', t === tabName);
-  });
-}
-
-function switchAdminTab(tabName) {
-  ['adminOrders', 'adminBookings', 'adminPottery'].forEach((t) => {
-    const content = document.getElementById(`${t}Content`);
-    const tabBtn = document.getElementById(`${t}TabBtn`);
-    if (content) content.style.display = t === tabName ? 'block' : 'none';
-    if (tabBtn) tabBtn.classList.toggle('active', t === tabName);
-  });
-}
-
-// ============================================================================
-// 13. Initialization Entrypoint
+// 12. App Initialization
 // ============================================================================
 async function initApp() {
   await verifyAuthSession();
   await loadInitialData();
 
-  // Attach Form Handlers
+  // Route to initial hash or default to 'paintings'
+  const initialHash = location.hash.replace('#', '').trim();
+  const validTabs = ['paintings', 'murals', 'pottery', 'activity', 'admin', 'auth'];
+  if (validTabs.includes(initialHash)) {
+    switchMainTab(initialHash);
+  } else {
+    switchMainTab('paintings');
+  }
+
+  // Attach Form Event Listeners
   const loginForm = document.getElementById('loginForm');
   if (loginForm) loginForm.addEventListener('submit', handleLoginSubmit);
 
@@ -1311,7 +1417,7 @@ async function initApp() {
   if (editPotteryForm) editPotteryForm.addEventListener('submit', handleEditPotterySubmit);
 }
 
-// Run safely after DOM is loaded
+// Safe bootstrap
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);
 } else {
