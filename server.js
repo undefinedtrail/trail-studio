@@ -16,6 +16,7 @@ const {
 } = require('./models/db');
 
 const {
+  generateToken,
   authenticate,
   requireRole,
   enforceOwnership,
@@ -24,7 +25,7 @@ const {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Load seed config from seed.json (Single source of truth for items, glazes, rates)
+// Load seed config from seed.json (Single source of truth for catalog & rates)
 let seedConfig = {};
 try {
   const seedPath = path.join(__dirname, 'seed.json');
@@ -49,7 +50,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
 
 // ============================================================================
-// Public / Configuration & Auth Utility Endpoints
+// Public / Configuration Endpoints
 // ============================================================================
 
 // App Configuration & Seed Options
@@ -63,7 +64,7 @@ app.get('/api/config', (req, res) => {
   });
 });
 
-// Pottery Catalog Options (Items & Glazes from seed data)
+// Pottery Catalog Options (Available to authenticated users)
 app.get('/api/pottery/options', authenticate, (req, res) => {
   res.json({
     items: POTTERY_ITEMS,
@@ -71,37 +72,89 @@ app.get('/api/pottery/options', authenticate, (req, res) => {
   });
 });
 
-// List users for demo quick-switch testing in the UI
-app.get('/api/auth/users', async (req, res) => {
-  try {
-    const users = await User.find({}).sort({ role: 1, email: 1 });
-    res.json(users);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch users: ' + err.message });
-  }
-});
+// ============================================================================
+// Authentication & Accounts (Email / Password + Signed JWT)
+// ============================================================================
 
-// Login / Switch User
-// Finds user by email or creates a new customer user if it doesn't exist
-app.post('/api/auth/login', async (req, res) => {
+// Customer Registration
+// Public endpoint for customer sign-up. Role is strictly locked to 'customer'.
+app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, role } = req.body;
+    const { email, password } = req.body;
+
     if (!email || typeof email !== 'string' || !email.trim()) {
       return res.status(400).json({ error: 'A valid email address is required.' });
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const cleanEmail = email.trim().toLowerCase();
-    let user = await User.findOne({ email: cleanEmail });
-
-    if (!user) {
-      const isStudio = role === 'admin' || role === 'studio' || cleanEmail.includes('studio');
-      const assignedRole = isStudio ? 'studio' : 'customer';
-      user = await User.create({ email: cleanEmail, role: assignedRole });
+    if (!emailRegex.test(cleanEmail)) {
+      return res.status(400).json({ error: 'Please enter a valid email format.' });
     }
 
+    if (!password || typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+
+    const existingUser = await User.findOne({ email: cleanEmail });
+    if (existingUser) {
+      return res.status(400).json({ error: 'This email address is already registered.' });
+    }
+
+    // Role is strictly locked to 'customer' - customers cannot register as studio
+    const user = new User({
+      email: cleanEmail,
+      password,
+      role: 'customer',
+    });
+
+    await user.save();
+
+    const token = generateToken(user);
+    res.status(201).json({
+      message: 'Account created successfully.',
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Registration failed: ' + err.message });
+  }
+});
+
+// Login (Email + Password)
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required.' });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const user = await User.findOne({ email: cleanEmail });
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+
+    const isMatch = await user.comparePassword(String(password));
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid email or password.' });
+    }
+
+    const token = generateToken(user);
     res.json({
-      message: 'Logged in successfully',
-      user,
+      message: 'Logged in successfully.',
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
     });
   } catch (err) {
     res.status(500).json({ error: 'Login failed: ' + err.message });
@@ -110,7 +163,13 @@ app.post('/api/auth/login', async (req, res) => {
 
 // Current Authenticated User Info
 app.get('/api/auth/me', authenticate, (req, res) => {
-  res.json({ user: req.user });
+  res.json({
+    user: {
+      id: req.user._id,
+      email: req.user.email,
+      role: req.user.role,
+    },
+  });
 });
 
 // ============================================================================
@@ -127,7 +186,7 @@ app.get('/api/paintings', authenticate, async (req, res) => {
   }
 });
 
-// POST /api/paintings (Add painting - Studio/Admin only)
+// POST /api/paintings (Add painting - Studio only)
 app.post('/api/paintings', authenticate, requireRole('admin', 'studio'), async (req, res) => {
   try {
     const { title, price, artist, description, imageUrl } = req.body;
@@ -137,16 +196,16 @@ app.post('/api/paintings', authenticate, requireRole('admin', 'studio'), async (
     }
 
     const priceNum = Number(price);
-    if (isNaN(priceNum) || priceNum <= 0) {
-      return res.status(400).json({ error: 'Price must be a positive number greater than 0.' });
+    if (!Number.isFinite(priceNum) || priceNum <= 0) {
+      return res.status(400).json({ error: 'Price must be a valid positive number.' });
     }
 
     const painting = await Painting.create({
       title: title.trim(),
-      artist: artist ? artist.trim() : 'Trail Studio Artist',
+      artist: artist && typeof artist === 'string' ? artist.trim() : 'Trail Studio Artist',
       price: priceNum,
-      description: description ? description.trim() : '',
-      imageUrl: imageUrl ? imageUrl.trim() : '',
+      description: description && typeof description === 'string' ? description.trim() : '',
+      imageUrl: imageUrl && typeof imageUrl === 'string' ? imageUrl.trim() : '',
       isAvailable: true,
     });
 
@@ -159,7 +218,7 @@ app.post('/api/paintings', authenticate, requireRole('admin', 'studio'), async (
   }
 });
 
-// PATCH /api/paintings/:id (Edit painting - Studio/Admin only, only while available)
+// PATCH /api/paintings/:id (Edit painting - Studio only, allowed only while available)
 app.patch('/api/paintings/:id', authenticate, requireRole('admin', 'studio'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -190,15 +249,15 @@ app.patch('/api/paintings/:id', authenticate, requireRole('admin', 'studio'), as
 
     if (price !== undefined) {
       const priceNum = Number(price);
-      if (isNaN(priceNum) || priceNum <= 0) {
-        return res.status(400).json({ error: 'Price must be a positive number greater than 0.' });
+      if (!Number.isFinite(priceNum) || priceNum <= 0) {
+        return res.status(400).json({ error: 'Price must be a valid positive number.' });
       }
       painting.price = priceNum;
     }
 
-    if (artist !== undefined) painting.artist = artist.trim();
-    if (description !== undefined) painting.description = description.trim();
-    if (imageUrl !== undefined) painting.imageUrl = imageUrl.trim();
+    if (artist !== undefined) painting.artist = String(artist).trim();
+    if (description !== undefined) painting.description = String(description).trim();
+    if (imageUrl !== undefined) painting.imageUrl = String(imageUrl).trim();
 
     await painting.save();
 
@@ -212,7 +271,7 @@ app.patch('/api/paintings/:id', authenticate, requireRole('admin', 'studio'), as
 });
 
 // POST /api/paintings/:id/buy (Buy painting - Customer only)
-// Atomic concurrency check: Painting is one of a kind and can only be bought once.
+// Concurrency rule: Paintings are one of a kind. Atomic findOneAndUpdate prevents race conditions.
 app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -221,7 +280,7 @@ app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async 
       return res.status(400).json({ error: 'Invalid painting ID format.' });
     }
 
-    // Atomic update ensures that only ONE concurrent request can successfully claim the painting
+    // Atomic condition ensures only ONE concurrent request can transition availability from true to false
     const updatedPainting = await Painting.findOneAndUpdate(
       { _id: id, isAvailable: true },
       { $set: { isAvailable: false } },
@@ -238,12 +297,19 @@ app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async 
       });
     }
 
-    // Create the order for this customer
-    const order = await Order.create({
-      paintingId: updatedPainting._id,
-      customerId: req.user._id,
-      status: 'placed',
-    });
+    // Create the order for the customer
+    let order;
+    try {
+      order = await Order.create({
+        paintingId: updatedPainting._id,
+        customerId: req.user._id,
+        status: 'placed',
+      });
+    } catch (orderErr) {
+      // Compensating action: roll back painting availability if order creation fails
+      await Painting.findByIdAndUpdate(id, { isAvailable: true });
+      throw orderErr;
+    }
 
     res.status(201).json({
       message: `You have successfully purchased "${updatedPainting.title}".`,
@@ -259,11 +325,12 @@ app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async 
 // 2. Orders Endpoints
 // ============================================================================
 
-// GET /api/orders (Customer sees only what they own; Studio sees all)
+// GET /api/orders (Customer sees own orders; Studio sees all orders)
 app.get('/api/orders', authenticate, async (req, res) => {
   try {
     const isStudio = req.user.role === 'admin' || req.user.role === 'studio';
     const query = isStudio ? {} : { customerId: req.user._id };
+
     const orders = await Order.find(query)
       .populate('paintingId')
       .populate('customerId', 'email role')
@@ -275,7 +342,7 @@ app.get('/api/orders', authenticate, async (req, res) => {
   }
 });
 
-// PATCH /api/orders/:id/cancel (Customer only - cancels order and makes painting available again)
+// PATCH /api/orders/:id/cancel (Customer only - cancels order and restores painting availability)
 app.patch('/api/orders/:id/cancel', authenticate, requireRole('customer'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -288,7 +355,7 @@ app.patch('/api/orders/:id/cancel', authenticate, requireRole('customer'), async
       return res.status(404).json({ error: 'Order not found.' });
     }
 
-    // Enforce ownership: Return 404 if customer tries to cancel someone else's order
+    // Customer privacy: viewing/cancelling another customer's order returns 404
     if (!enforceOwnership(order.customerId, req.user)) {
       return res.status(404).json({ error: 'Order not found.' });
     }
@@ -296,16 +363,27 @@ app.patch('/api/orders/:id/cancel', authenticate, requireRole('customer'), async
     if (order.status === 'cancelled') {
       return res.status(400).json({ error: 'Order is already cancelled.' });
     }
+    if (order.status !== 'placed') {
+      return res.status(400).json({ error: 'Only placed orders can be cancelled.' });
+    }
 
-    order.status = 'cancelled';
-    await order.save();
+    // Atomic update prevents duplicate cancellations
+    const cancelledOrder = await Order.findOneAndUpdate(
+      { _id: id, status: 'placed', customerId: req.user._id },
+      { $set: { status: 'cancelled' } },
+      { new: true }
+    );
 
-    // Make the painting available again
-    await Painting.findByIdAndUpdate(order.paintingId, { isAvailable: true });
+    if (!cancelledOrder) {
+      return res.status(400).json({ error: 'Order is already cancelled or cannot be modified.' });
+    }
+
+    // Return the painting to the available catalog
+    await Painting.findByIdAndUpdate(cancelledOrder.paintingId, { isAvailable: true });
 
     res.json({
-      message: 'Order cancelled successfully. The painting is now available again in Trail Studio.',
-      order,
+      message: 'Order cancelled successfully. The artwork is now available again in Trail Studio.',
+      order: cancelledOrder,
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to cancel order: ' + err.message });
@@ -321,10 +399,11 @@ app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res
   try {
     const { date, size, address } = req.body;
 
+    // Strict numeric validation for size (10 to 500 sq ft)
     const sizeNum = Number(size);
-    if (isNaN(sizeNum) || sizeNum < 10 || sizeNum > 500) {
+    if (!Number.isFinite(sizeNum) || sizeNum < 10 || sizeNum > 500) {
       return res.status(400).json({
-        error: 'Wall size must be between 10 and 500 sq ft.',
+        error: 'Wall size must be a valid number between 10 and 500 sq ft.',
       });
     }
 
@@ -341,6 +420,7 @@ app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res
       });
     }
 
+    // Boundary check: 7 to 90 days from today
     const nowUtc = normalizeDate(new Date());
     const diffMs = normalizedDate.getTime() - nowUtc.getTime();
     const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
@@ -351,7 +431,7 @@ app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res
       });
     }
 
-    // Double-booking check: Each date can only be booked once for active bookings
+    // Check if date already has an active booking (requested or confirmed)
     const existingBooking = await Booking.findOne({
       date: normalizedDate,
       status: { $in: ['requested', 'confirmed'] },
@@ -381,6 +461,7 @@ app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res
       booking,
     });
   } catch (err) {
+    // Intercept MongoDB duplicate key error from partial unique index
     if (err.code === 11000) {
       return res.status(409).json({
         error: 'This date has already been booked. Please pick another date.',
@@ -390,11 +471,12 @@ app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res
   }
 });
 
-// GET /api/bookings (List bookings: Customer sees only what they own; Studio sees all)
+// GET /api/bookings (Customer sees own bookings; Studio sees all bookings)
 app.get('/api/bookings', authenticate, async (req, res) => {
   try {
     const isStudio = req.user.role === 'admin' || req.user.role === 'studio';
     const query = isStudio ? {} : { customerId: req.user._id };
+
     const bookings = await Booking.find(query)
       .populate('customerId', 'email role')
       .sort({ date: 1 });
@@ -405,7 +487,7 @@ app.get('/api/bookings', authenticate, async (req, res) => {
   }
 });
 
-// GET /api/bookings/:id (Get specific booking - enforces customer ownership or returns 404)
+// GET /api/bookings/:id (Enforces customer ownership or returns 404)
 app.get('/api/bookings/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
@@ -429,7 +511,7 @@ app.get('/api/bookings/:id', authenticate, async (req, res) => {
   }
 });
 
-// PATCH /api/bookings/:id/status (Confirm or decline booking - Studio/Admin only)
+// PATCH /api/bookings/:id/status (Studio confirm/decline: only transitions from 'requested')
 app.patch('/api/bookings/:id/status', authenticate, requireRole('admin', 'studio'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -450,6 +532,17 @@ app.patch('/api/bookings/:id/status', authenticate, requireRole('admin', 'studio
       return res.status(404).json({ error: 'Booking not found.' });
     }
 
+    // Do not allow cancelled or declined bookings to be modified or confirmed later
+    if (booking.status === 'confirmed') {
+      return res.status(400).json({ error: 'Booking has already been confirmed.' });
+    }
+    if (booking.status === 'declined') {
+      return res.status(400).json({ error: 'Cannot modify a booking that was already declined.' });
+    }
+    if (booking.status === 'cancelled') {
+      return res.status(400).json({ error: 'Cannot modify a booking that has been cancelled.' });
+    }
+
     booking.status = status;
     await booking.save();
 
@@ -462,7 +555,7 @@ app.patch('/api/bookings/:id/status', authenticate, requireRole('admin', 'studio
   }
 });
 
-// PATCH /api/bookings/:id/cancel (Customer only - can cancel until 3 days before the date)
+// PATCH /api/bookings/:id/cancel (Customer only - allowed up to 3 days before the date)
 app.patch('/api/bookings/:id/cancel', authenticate, requireRole('customer'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -486,6 +579,7 @@ app.patch('/api/bookings/:id/cancel', authenticate, requireRole('customer'), asy
       return res.status(400).json({ error: 'Cannot cancel a booking that was already declined.' });
     }
 
+    // 3-day lead time check
     const todayUtc = normalizeDate(new Date());
     const bookingDateUtc = normalizeDate(booking.date);
     const diffDays = Math.round((bookingDateUtc.getTime() - todayUtc.getTime()) / (1000 * 60 * 60 * 24));
@@ -509,10 +603,9 @@ app.patch('/api/bookings/:id/cancel', authenticate, requireRole('customer'), asy
 });
 
 // ============================================================================
-// 4. Custom Pottery Endpoints (Items & glazes validated against seed.json)
+// 4. Custom Pottery Endpoints (Items & Glazes validated against seed.json)
 // ============================================================================
 
-// Helper to validate pottery item & glaze IDs against seed data
 function isValidPotteryItem(itemId) {
   return POTTERY_ITEMS.some((i) => i.id === itemId);
 }
@@ -522,26 +615,23 @@ function isValidGlaze(glazeId) {
 }
 
 // POST /api/pottery (Customer creates pottery request)
-// Validates: authenticated customer, valid seed item, valid seed glaze, quantity 1-12, needed-by >= 14 days
 app.post('/api/pottery', authenticate, requireRole('customer'), async (req, res) => {
   try {
     const { itemId, glazeId, quantity, neededBy } = req.body;
 
-    // Validate item against seed data
     if (!itemId || !isValidPotteryItem(itemId)) {
       return res.status(400).json({
-        error: 'Invalid pottery item. Please choose a valid item from the catalog.',
+        error: 'Invalid pottery item. Please select a valid item from the catalog.',
       });
     }
 
-    // Validate glaze against seed data
     if (!glazeId || !isValidGlaze(glazeId)) {
       return res.status(400).json({
-        error: 'Invalid glaze selection. Please choose a valid glaze from the catalog.',
+        error: 'Invalid glaze selection. Please select a valid glaze from the catalog.',
       });
     }
 
-    // Validate quantity: integer between 1 and 12
+    // Strict integer validation for quantity (1 to 12)
     const qtyNum = Number(quantity);
     if (!Number.isInteger(qtyNum) || qtyNum < 1 || qtyNum > 12) {
       return res.status(400).json({
@@ -549,7 +639,6 @@ app.post('/api/pottery', authenticate, requireRole('customer'), async (req, res)
       });
     }
 
-    // Validate needed-by date: at least 14 days away from today
     const normalizedDate = normalizeDate(neededBy);
     if (!normalizedDate) {
       return res.status(400).json({
@@ -557,6 +646,7 @@ app.post('/api/pottery', authenticate, requireRole('customer'), async (req, res)
       });
     }
 
+    // Lead time validation: at least 14 days away from today
     const todayUtc = normalizeDate(new Date());
     const diffMs = normalizedDate.getTime() - todayUtc.getTime();
     const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
@@ -587,7 +677,7 @@ app.post('/api/pottery', authenticate, requireRole('customer'), async (req, res)
   }
 });
 
-// GET /api/pottery (List pottery requests: Customer sees own; Studio sees all)
+// GET /api/pottery (Customer sees own requests; Studio sees all requests)
 app.get('/api/pottery', authenticate, async (req, res) => {
   try {
     const isStudio = req.user.role === 'admin' || req.user.role === 'studio';
@@ -603,7 +693,7 @@ app.get('/api/pottery', authenticate, async (req, res) => {
   }
 });
 
-// GET /api/pottery/:id (Individual pottery request - customer privacy enforced or 404)
+// GET /api/pottery/:id (Enforces customer ownership or returns 404)
 app.get('/api/pottery/:id', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
@@ -616,7 +706,6 @@ app.get('/api/pottery/:id', authenticate, async (req, res) => {
       return res.status(404).json({ error: 'Pottery request not found.' });
     }
 
-    // Privacy rule: Customer attempting to access another customer's request gets 404 Not Found
     if (!enforceOwnership(request.customerId._id || request.customerId, req.user)) {
       return res.status(404).json({ error: 'Pottery request not found.' });
     }
@@ -640,12 +729,11 @@ app.patch('/api/pottery/:id', authenticate, requireRole('customer'), async (req,
       return res.status(404).json({ error: 'Pottery request not found.' });
     }
 
-    // Customer ownership check
     if (!enforceOwnership(request.customerId, req.user)) {
       return res.status(404).json({ error: 'Pottery request not found.' });
     }
 
-    // Business rule: A customer can edit a request ONLY while it is still 'requested'
+    // Business rule: Edit allowed ONLY while status is 'requested'
     if (request.status !== 'requested') {
       return res.status(400).json({
         error: `Cannot edit pottery request: request has already been ${request.status}.`,
@@ -671,7 +759,7 @@ app.patch('/api/pottery/:id', authenticate, requireRole('customer'), async (req,
     if (quantity !== undefined) {
       const qtyNum = Number(quantity);
       if (!Number.isInteger(qtyNum) || qtyNum < 1 || qtyNum > 12) {
-        return res.status(400).json({ error: 'Quantity must be an integer between 1 and 12.' });
+        return res.status(400).json({ error: 'Quantity must be a whole number between 1 and 12.' });
       }
       request.quantity = qtyNum;
     }
@@ -722,7 +810,7 @@ app.patch('/api/pottery/:id/cancel', authenticate, requireRole('customer'), asyn
       return res.status(404).json({ error: 'Pottery request not found.' });
     }
 
-    // Business rule: A customer can cancel a request ONLY while it is still 'requested'
+    // Business rule: Cancel allowed ONLY while status is 'requested'
     if (request.status !== 'requested') {
       return res.status(400).json({
         error: `Cannot cancel pottery request: request has already been ${request.status}.`,
@@ -741,7 +829,7 @@ app.patch('/api/pottery/:id/cancel', authenticate, requireRole('customer'), asyn
   }
 });
 
-// PATCH /api/pottery/:id/status (Studio accepts or declines request - only transitions from 'requested')
+// PATCH /api/pottery/:id/status (Studio accepts or declines: only transitions from 'requested')
 app.patch('/api/pottery/:id/status', authenticate, requireRole('admin', 'studio'), async (req, res) => {
   try {
     const { id } = req.params;
