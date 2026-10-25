@@ -995,6 +995,55 @@
     let cachedPaintings = [];
     let cachedCustomerPottery = [];
 
+    function getAuthHeaders() {
+      const headers = { 'Content-Type': 'application/json' };
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+      return headers;
+    }
+
+    async function fetchConfig() {
+      try {
+        const res = await fetch('/api/config');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.ratePerSqFt) ratePerSqFt = data.ratePerSqFt;
+          if (data.currency === 'INR') currencySymbol = '₹';
+          if (Array.isArray(data.potteryItems)) potteryItems = data.potteryItems;
+          if (Array.isArray(data.glazes)) glazes = data.glazes;
+          updatePriceEstimate();
+        }
+      } catch (e) {
+        console.warn('Could not fetch studio config');
+      }
+    }
+
+    function setupPotteryOptions() {
+      const itemSelect = document.getElementById('potteryItemSelect');
+      const glazeSelect = document.getElementById('potteryGlazeSelect');
+      const editItemSelect = document.getElementById('editPotteryItem');
+      const editGlazeSelect = document.getElementById('editPotteryGlaze');
+
+      const itemOptions = potteryItems.map(i => `<option value="${i.id}">${escapeHtml(i.name)} (${i.id})</option>`).join('');
+      const glazeOptions = glazes.map(g => `<option value="${g.id}">${escapeHtml(g.name)} (${g.id})</option>`).join('');
+
+      if (itemSelect) itemSelect.innerHTML = itemOptions;
+      if (glazeSelect) glazeSelect.innerHTML = glazeOptions;
+      if (editItemSelect) editItemSelect.innerHTML = itemOptions;
+      if (editGlazeSelect) editGlazeSelect.innerHTML = glazeOptions;
+
+      // Minimum 14-day lead time for pottery
+      const potteryDateInput = document.getElementById('potteryNeededBy');
+      const editPotteryDateInput = document.getElementById('editPotteryNeededBy');
+      const minDate = new Date();
+      minDate.setDate(minDate.getDate() + 14);
+      const minStr = minDate.toISOString().split('T')[0];
+
+      if (potteryDateInput) potteryDateInput.min = minStr;
+      if (editPotteryDateInput) editPotteryDateInput.min = minStr;
+    }
+
     async function initApp() {
       await fetchConfig();
       setupDateRangeConstraints();
