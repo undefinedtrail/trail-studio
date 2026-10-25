@@ -1,7 +1,7 @@
 # System Design (DESIGN.md)
 
 ### 1. How do login and the two roles work?
-Users can log in with their email and password or use the 1-click role switcher in the header to switch between test accounts. Passwords are encrypted safely using bcrypt hashing, and the server returns a signed JSON Web Token (JWT) that the browser sends in the `Authorization` header for protected requests. 
+Users log in with their email and password. Passwords are encrypted safely using bcrypt hashing, and the server returns a signed JSON Web Token (JWT) that the browser sends in the `Authorization: Bearer <token>` header for protected requests. The server requires a configured `JWT_SECRET` environment variable and fails startup with a clear error if it is missing.
 
 The app has two roles: `customer` and `studio` (admin). Customers can register, browse and buy paintings, book wall dates, request custom pottery, and manage their own orders. The studio can view all customer submissions, confirm or decline bookings, accept or decline pottery requests, and add or edit available paintings. 
 
@@ -19,6 +19,9 @@ MongoDB stores data in JSON-like documents, which fits our paintings, orders, bo
 
 MongoDB also supports partial unique indexes. This lets us guarantee that a booking date is unique only while a booking is active (`requested` or `confirmed`), while still keeping cancelled or declined bookings in history.
 
+**Replica Set vs Standalone Transactions:**
+When connected to a MongoDB replica set (such as MongoDB Atlas or local replica sets), painting purchases and order cancellations run inside genuine multi-document ACID transactions (`startTransaction` / `commitTransaction`). If running on a standalone local MongoDB instance where replica sets are not configured, the system automatically detects this and falls back to atomic conditional operations with compensating rollback.
+
 ---
 
 ### 3. How do you stop two people from taking the same painting or date?
@@ -29,10 +32,10 @@ We use MongoDB's atomic `findOneAndUpdate`:
 const updatedPainting = await Painting.findOneAndUpdate(
   { _id: paintingId, isAvailable: true },
   { $set: { isAvailable: false } },
-  { new: true }
+  { new: true, ...sessionOpts }
 );
 ```
-Because this happens in a single atomic step in the database, only the first request succeeds. Any second request finds `isAvailable` is already false and gets an immediate response explaining that the painting was already sold. If creating the order fails afterwards, a rollback step sets `isAvailable` back to true.
+Because this happens in a single atomic step in the database, only the first request succeeds. Any concurrent request finds `isAvailable` is already false and gets an immediate response explaining that the painting was already sold. On replica sets, this runs inside a multi-document transaction alongside order creation. On standalone MongoDB, a compensating rollback restores availability if order creation fails.
 
 **For Wall Bookings:**
 We normalize booking dates to UTC midnight and use a partial unique index on active bookings:
@@ -50,11 +53,11 @@ If two customers try to book the exact same date at the same time, the database 
 
 **What was finished:**
 - Full login and registration with bcrypt password hashing and JWT tokens.
-- All 3 services: original folk paintings from seed data, wall mural bookings with date and size validation, and custom pottery requests with item and glaze validation.
+- All 3 services: original folk paintings from seed data, wall mural commissions with date and size validation, and custom pottery requests with item and glaze validation.
 - All status flows: orders (`placed`, `cancelled`), bookings (`requested`, `confirmed`, `declined`, `cancelled`), and pottery requests (`requested`, `accepted`, `declined`, `cancelled`).
 - Strict role permissions and customer privacy isolation (404 on other customers' data).
-- Simple frontend with clear loading, empty, and refusal messages, plus quick login buttons for demo accounts.
-- Automated API test suite covering all services, security checks, and concurrency.
+- Clean frontend with explicit loading, empty, and refusal messages, plus quick-fill demo login buttons.
+- Automated API test suite covering all services, security checks, and concurrency against an isolated test database with strict safety protections.
 
 **What was left out (out of scope):**
 Following Section 06 of the assignment brief, we intentionally left out:

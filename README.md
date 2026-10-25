@@ -99,17 +99,17 @@ For quick testing, you can use the pre-seeded demo accounts or create a new acco
 | **Customer (Alice)** | `alice@example.com` | `Customer@123` | Buy paintings, book wall dates, request pottery, cancel own orders |
 | **Customer (Bob)** | `bob@example.com` | `Customer@123` | Second customer account to test privacy isolation and date conflicts |
 
-*Tip: The top header has 1-click **Switch User** buttons (`Alice`, `Bob`, and `Studio Admin`) so anyone can switch roles instantly without typing credentials.*
+*Tip: The login page includes quick-fill buttons for Alice, Bob, and Studio Admin so you can fill demo credentials and log in with a single click.*
 
 ### Testing Flow
-1. Open the website — **Alice (Customer)** is active by default.
+1. On the login screen, click **Alice (Customer)** to log in as Alice.
 2. Go to **Paintings** and click **Buy Artwork** on any piece.
 3. Go to **Wall Murals**, select a date 10 days away, enter `60` sq ft, and submit a booking.
 4. Go to **Custom Pottery**, pick a `Kulhad` with `Kumkum Red` glaze, set quantity to `4`, pick a date 20 days away, and submit.
-5. Click **Studio Admin** in the top bar:
+5. Click **Log Out** in the header, then click **Studio Admin** on the login screen to log in:
    - The **Trail Studio Dashboard** opens immediately.
    - Confirm Alice's mural booking and accept her pottery request.
-6. Click **Bob (Customer)** in the top bar:
+6. Click **Log Out**, then log in as **Bob (Customer)**:
    - Check **My Requests & Orders** to verify Bob cannot see Alice's records (customer privacy).
    - Try to buy the painting Alice bought to verify the sold-out refusal message.
    - Try to book the date Alice booked to verify the date-taken refusal message.
