@@ -6,8 +6,8 @@
   <title>Trail Studio · Handcrafted Art, Wall Murals & Custom Pottery</title>
   <style>
     /* ==========================================================================
-       Handmade, Minimal & Functional Studio Stylesheet
-       Clean artisan paper aesthetic - warm neutrals, honest borders
+       Trail Studio - Clean, Handmade Artisan Stylesheet
+       Pure CSS, zero framework bloat, accessible and responsive
        ========================================================================== */
     :root {
       --bg: #fbf9f5;
@@ -47,7 +47,7 @@
     }
 
     .container {
-      max-width: 1000px;
+      max-width: 1020px;
       margin: 0 auto;
     }
 
@@ -69,7 +69,7 @@
     h1 {
       font-family: var(--font-serif);
       font-weight: 600;
-      font-size: 1.95rem;
+      font-size: 2rem;
       letter-spacing: -0.02em;
       color: #1a1918;
     }
@@ -80,25 +80,26 @@
       margin-top: 2px;
     }
 
-    /* Role & Session Switcher Bar */
+    /* Session & Auth Bar */
     .session-bar {
       background: var(--tag-bg);
       border: 1px solid var(--border);
       border-radius: 4px;
-      padding: 12px 14px;
+      padding: 10px 14px;
       margin-top: 14px;
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
       align-items: center;
       gap: 10px;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
     }
 
     .session-info {
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
     .role-badge {
@@ -123,28 +124,18 @@
       border: 1px solid #ecc3b9;
     }
 
-    .quick-users {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .quick-users span {
-      color: var(--text-muted);
-      font-size: 0.82rem;
-    }
-
+    /* Buttons */
     button, .btn {
       font-family: inherit;
       font-size: 0.88rem;
-      padding: 6px 12px;
+      padding: 7px 14px;
       border-radius: 4px;
       cursor: pointer;
       border: 1px solid var(--border);
       background: #ffffff;
       color: var(--text);
       font-weight: 500;
+      transition: background-color 0.1s ease, border-color 0.1s ease;
     }
 
     button:hover:not(:disabled) {
@@ -169,7 +160,7 @@
     }
 
     .btn-sm {
-      padding: 3px 8px;
+      padding: 4px 10px;
       font-size: 0.8rem;
     }
 
@@ -214,7 +205,7 @@
       font-weight: 600;
     }
 
-    /* Section Views */
+    /* Section Panels */
     .view-panel {
       display: none;
     }
@@ -234,16 +225,17 @@
 
     .section-header h2 {
       font-family: var(--font-serif);
-      font-size: 1.4rem;
+      font-size: 1.45rem;
       font-weight: 600;
     }
 
-    /* Status Messages: Loading, Empty, Error, Success */
+    /* Status Messages */
     .status-box {
       padding: 12px 14px;
       border-radius: 4px;
       margin-bottom: 16px;
       font-size: 0.9rem;
+      line-height: 1.4;
     }
 
     .status-box.loading {
@@ -278,7 +270,7 @@
     /* Painting Grid */
     .painting-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
       gap: 20px;
     }
 
@@ -471,7 +463,7 @@
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.45);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -484,9 +476,63 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 24px;
-      max-width: 500px;
+      max-width: 520px;
       width: 100%;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    }
+
+    /* Auth Box */
+    .auth-container {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 24px;
+      max-width: 480px;
+      margin: 20px auto;
+    }
+
+    .auth-tabs {
+      display: flex;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .auth-tab-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 8px;
+      font-size: 0.95rem;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      border-radius: 0;
+    }
+
+    .auth-tab-btn.active {
+      color: var(--accent);
+      border-bottom: 2px solid var(--accent);
+      font-weight: 600;
+    }
+
+    .demo-credentials {
+      background: var(--tag-bg);
+      border: 1px dashed var(--border);
+      border-radius: 4px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    .demo-credentials strong {
+      color: var(--text);
+    }
+
+    .demo-btn-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 6px;
     }
 
     /* Footer */
@@ -515,340 +561,379 @@
         </div>
       </div>
 
-      <!-- User Session & Quick Switcher -->
-      <div class="session-bar">
+      <!-- Logged-in Session Bar -->
+      <div class="session-bar" id="sessionBar" style="display:none;">
         <div class="session-info">
-          <span>Logged in:</span>
-          <strong id="sessionEmail">alice@example.com</strong>
-          <span class="role-badge customer" id="sessionRole">customer</span>
+          <span>Active Session:</span>
+          <strong id="sessionEmail"></strong>
+          <span class="role-badge" id="sessionRole"></span>
         </div>
-        <div class="quick-users">
-          <span>Quick Switch:</span>
-          <button class="btn btn-sm" onclick="switchUser('alice@example.com', 'customer')">Alice (Customer)</button>
-          <button class="btn btn-sm" onclick="switchUser('bob@example.com', 'customer')">Bob (Customer)</button>
-          <button class="btn btn-sm" onclick="switchUser('studio@artstudio.in', 'studio')">Trail Studio Admin</button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-sm" onclick="handleLogout()">Log Out</button>
         </div>
       </div>
     </header>
 
-    <!-- Navigation Tabs -->
-    <nav class="nav-tabs">
-      <button class="tab-btn active" onclick="showTab('paintings')">Browse Paintings</button>
-      <button class="tab-btn" id="tabWallBtn" onclick="showTab('wall')">Book a Wall Mural</button>
-      <button class="tab-btn" id="tabPotteryBtn" onclick="showTab('pottery')">Custom Pottery</button>
-      <button class="tab-btn" id="tabMyRecordsBtn" onclick="showTab('records')">My Requests & Orders</button>
-      <button class="tab-btn" id="tabAdminBtn" style="display:none;" onclick="showTab('admin')">Trail Studio Dashboard</button>
-    </nav>
-
-    <!-- Global Action Notification Box -->
+    <!-- Global Notification Banner -->
     <div id="globalNotification"></div>
 
     <!-- ======================================================================
-         VIEW 1: Browse Paintings (Customer & Studio)
+         AUTH VIEW (Shown when user is not logged in)
          ====================================================================== -->
-    <section id="viewPaintings" class="view-panel active">
-      <div class="section-header">
-        <div>
-          <h2>Original Folk Art Collection</h2>
-          <p class="help-text">Every piece is handcrafted and one of a kind. Each painting can only be purchased once.</p>
-        </div>
-        <button class="btn" onclick="loadPaintings()">↻ Refresh Gallery</button>
+    <section id="viewAuth" class="auth-container">
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tabLoginBtn" onclick="toggleAuthMode('login')">Sign In</button>
+        <button class="auth-tab-btn" id="tabRegisterBtn" onclick="toggleAuthMode('register')">Create Customer Account</button>
       </div>
 
-      <!-- State containers: Loading, Empty, Error -->
-      <div id="paintingsLoading" class="status-box loading" style="display:none;">
-        <span>⏳ Loading artworks from Trail Studio collection...</span>
-      </div>
-      <div id="paintingsError" class="status-box error" style="display:none;"></div>
-      <div id="paintingsEmpty" class="status-box empty" style="display:none;">
-        <p>No paintings currently listed in the studio.</p>
-      </div>
-
-      <!-- Paintings Grid -->
-      <div id="paintingsGrid" class="painting-grid"></div>
-    </section>
-
-    <!-- ======================================================================
-         VIEW 2: Wall Commission Booking (Customer)
-         ====================================================================== -->
-    <section id="viewWall" class="view-panel">
-      <div class="section-header">
-        <div>
-          <h2>Book a Wall Mural</h2>
-          <p class="help-text">Commission our artists to handcraft a mural directly onto your wall. Each calendar date can only be booked once.</p>
+      <!-- Quick Demo Account Fillers -->
+      <div class="demo-credentials">
+        <div><strong>Demo Accounts:</strong></div>
+        <div class="demo-btn-group">
+          <button type="button" class="btn btn-sm" onclick="fillDemoAccount('alice@example.com', 'Customer@123')">Alice (Customer)</button>
+          <button type="button" class="btn btn-sm" onclick="fillDemoAccount('bob@example.com', 'Customer@123')">Bob (Customer)</button>
+          <button type="button" class="btn btn-sm" onclick="fillDemoAccount('studio@artstudio.in', 'Studio@123')">Trail Studio Admin</button>
         </div>
       </div>
 
-      <div id="wallActionMessage"></div>
+      <div id="authMessage"></div>
 
-      <form class="studio-form" id="wallBookingForm" onsubmit="handleWallBooking(event)">
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)">
         <div class="form-group">
-          <label for="bookingDate">Preferred Date (7 to 90 days away)</label>
-          <input type="date" id="bookingDate" required onchange="validateBookingDateInput()">
-          <div class="help-text" id="dateHelperText">Pick a date between 7 and 90 days from today.</div>
+          <label for="loginEmail">Email Address</label>
+          <input type="email" id="loginEmail" placeholder="your.email@example.com" required>
         </div>
-
         <div class="form-group">
-          <label for="wallSize">Wall Size (sq ft: 10 to 500)</label>
-          <input type="number" id="wallSize" min="10" max="500" placeholder="e.g. 120" required oninput="updatePriceEstimate()">
-          <div class="help-text" id="priceEstimateText">Rate: ₹150 / sq ft. Estimated cost: ₹0</div>
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
         </div>
+        <button type="submit" class="btn btn-primary" id="btnLoginSubmit" style="width:100%;">Sign In</button>
+      </form>
 
+      <!-- Register Form -->
+      <form id="registerForm" style="display:none;" onsubmit="handleRegisterSubmit(event)">
         <div class="form-group">
-          <label for="wallAddress">Physical Wall Location / Site Address</label>
-          <textarea id="wallAddress" rows="3" placeholder="Plot, Street, City, Pincode" required></textarea>
+          <label for="regEmail">Email Address</label>
+          <input type="email" id="regEmail" placeholder="new.customer@example.com" required>
         </div>
-
-        <button type="submit" class="btn btn-primary" id="btnSubmitBooking">Request Wall Booking</button>
+        <div class="form-group">
+          <label for="regPassword">Password (Minimum 6 characters)</label>
+          <input type="password" id="regPassword" minlength="6" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btnRegisterSubmit" style="width:100%;">Create Account</button>
+        <div class="help-text" style="margin-top:8px;">All new sign-ups are registered with customer permissions.</div>
       </form>
     </section>
 
     <!-- ======================================================================
-         VIEW 3: Custom Pottery Request (Customer)
+         AUTHENTICATED APP CONTENT (Shown when user is logged in)
          ====================================================================== -->
-    <section id="viewPottery" class="view-panel">
-      <div class="section-header">
-        <div>
-          <h2>Request Custom Pottery</h2>
-          <p class="help-text">Choose a traditional clay form and signature mineral glaze. Handcrafted by master artisans with a 14-day creation window.</p>
-        </div>
-      </div>
+    <div id="appContent" style="display:none;">
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button class="tab-btn active" id="tabPaintingsBtn" onclick="showTab('paintings')">Browse Paintings</button>
+        <button class="tab-btn" id="tabWallBtn" onclick="showTab('wall')">Book a Wall Mural</button>
+        <button class="tab-btn" id="tabPotteryBtn" onclick="showTab('pottery')">Custom Pottery</button>
+        <button class="tab-btn" id="tabMyRecordsBtn" onclick="showTab('records')">My Requests & Orders</button>
+        <button class="tab-btn" id="tabAdminBtn" style="display:none;" onclick="showTab('admin')">Trail Studio Dashboard</button>
+      </nav>
 
-      <div id="potteryActionMessage"></div>
-
-      <form class="studio-form" id="potteryRequestForm" onsubmit="handlePotteryRequest(event)">
-        <div class="form-group">
-          <label for="potteryItemSelect">Choose Pottery Item</label>
-          <select id="potteryItemSelect" required></select>
-          <div class="help-text">Items crafted on traditional potters' wheels using local terracotta and fine clays.</div>
-        </div>
-
-        <div class="form-group">
-          <label for="potteryGlazeSelect">Choose Glaze Finish</label>
-          <select id="potteryGlazeSelect" required></select>
-          <div class="help-text">All glazes are lead-free mineral and natural pigment washes.</div>
+      <!-- VIEW 1: Browse Paintings -->
+      <section id="viewPaintings" class="view-panel active">
+        <div class="section-header">
+          <div>
+            <h2>Original Folk Art Collection</h2>
+            <p class="help-text">Every artwork is handcrafted and one of a kind. Each piece can only be purchased once.</p>
+          </div>
+          <button class="btn" onclick="loadPaintings()">↻ Refresh Gallery</button>
         </div>
 
-        <div class="form-group">
-          <label for="potteryQuantity">Quantity (1 to 12 pieces)</label>
-          <input type="number" id="potteryQuantity" min="1" max="12" value="1" required>
+        <div id="paintingsLoading" class="status-box loading" style="display:none;">
+          <span>⏳ Loading artworks from Trail Studio collection...</span>
+        </div>
+        <div id="paintingsError" class="status-box error" style="display:none;"></div>
+        <div id="paintingsEmpty" class="status-box empty" style="display:none;">
+          <p>No paintings currently listed in the studio.</p>
         </div>
 
-        <div class="form-group">
-          <label for="potteryNeededBy">Needed-by Date (At least 14 days away)</label>
-          <input type="date" id="potteryNeededBy" required onchange="validatePotteryDateInput()">
-          <div class="help-text" id="potteryDateHelperText">Pick a date at least 14 days from today for shaping, drying, glazing, and kiln firing.</div>
+        <div id="paintingsGrid" class="painting-grid"></div>
+      </section>
+
+      <!-- VIEW 2: Wall Commission Booking (Customer) -->
+      <section id="viewWall" class="view-panel">
+        <div class="section-header">
+          <div>
+            <h2>Book a Wall Mural</h2>
+            <p class="help-text">Commission master artisans to paint directly on your wall. Each calendar date can have only one booking.</p>
+          </div>
         </div>
 
-        <button type="submit" class="btn btn-primary" id="btnSubmitPottery">Submit Pottery Request</button>
-      </form>
-    </section>
+        <div id="wallActionMessage"></div>
 
-    <!-- ======================================================================
-         VIEW 4: My Requests & Orders (Customer View)
-         ====================================================================== -->
-    <section id="viewRecords" class="view-panel">
-      <div class="section-header">
-        <div>
-          <h2>My Requests, Bookings & Orders</h2>
-          <p class="help-text">Track your art purchases, wall mural bookings, and custom pottery commissions.</p>
+        <form class="studio-form" id="wallBookingForm" onsubmit="handleWallBooking(event)">
+          <div class="form-group">
+            <label for="bookingDate">Preferred Date (7 to 90 days from today)</label>
+            <input type="date" id="bookingDate" required onchange="validateBookingDateInput()">
+            <div class="help-text" id="dateHelperText">Pick a date between 7 and 90 days from today.</div>
+          </div>
+
+          <div class="form-group">
+            <label for="wallSize">Wall Size (sq ft: 10 to 500)</label>
+            <input type="number" id="wallSize" min="10" max="500" placeholder="e.g. 120" required oninput="updatePriceEstimate()">
+            <div class="help-text" id="priceEstimateText">Rate: ₹150 / sq ft. Estimated cost: ₹0</div>
+          </div>
+
+          <div class="form-group">
+            <label for="wallAddress">Physical Wall Location / Site Address</label>
+            <textarea id="wallAddress" rows="3" placeholder="Plot, Street, City, Pincode" required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="btnSubmitBooking">Request Wall Booking</button>
+        </form>
+      </section>
+
+      <!-- VIEW 3: Custom Pottery Request (Customer) -->
+      <section id="viewPottery" class="view-panel">
+        <div class="section-header">
+          <div>
+            <h2>Request Custom Pottery</h2>
+            <p class="help-text">Choose a traditional clay form and natural glaze finish. Handcrafted with a minimum 14-day creation window.</p>
+          </div>
         </div>
-        <button class="btn" onclick="loadMyRecords()">↻ Refresh My Records</button>
-      </div>
 
-      <div id="recordsActionMessage"></div>
+        <div id="potteryActionMessage"></div>
 
-      <!-- Pottery Requests Sub-section -->
-      <h3 style="font-family: var(--font-serif); margin-bottom: 8px;">My Custom Pottery Requests</h3>
-      <div id="myPotteryLoading" class="status-box loading" style="display:none;">
-        <span>⏳ Loading your pottery requests...</span>
-      </div>
-      <div id="myPotteryError" class="status-box error" style="display:none;"></div>
-      <div id="myPotteryEmpty" class="status-box empty" style="display:none;">
-        <p>You have not submitted any custom pottery requests yet. <a href="javascript:void(0)" onclick="showTab('pottery')">Request custom pottery</a></p>
-      </div>
-      <div class="data-table-wrapper" id="myPotteryTableWrapper" style="display:none;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Glaze</th>
-              <th>Quantity</th>
-              <th>Needed-By Date</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="myPotteryTbody"></tbody>
-        </table>
-      </div>
+        <form class="studio-form" id="potteryRequestForm" onsubmit="handlePotteryRequest(event)">
+          <div class="form-group">
+            <label for="potteryItemSelect">Choose Pottery Item</label>
+            <select id="potteryItemSelect" required></select>
+            <div class="help-text">Items crafted on traditional potters' wheels using local terracotta and fine clays.</div>
+          </div>
 
-      <!-- Wall Bookings Sub-section -->
-      <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">My Wall Bookings</h3>
-      <div id="myBookingsLoading" class="status-box loading" style="display:none;">
-        <span>⏳ Loading your mural bookings...</span>
-      </div>
-      <div id="myBookingsError" class="status-box error" style="display:none;"></div>
-      <div id="myBookingsEmpty" class="status-box empty" style="display:none;">
-        <p>You have no wall bookings yet. <a href="javascript:void(0)" onclick="showTab('wall')">Book a wall painting</a></p>
-      </div>
-      <div class="data-table-wrapper" id="myBookingsTableWrapper" style="display:none;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Wall Size</th>
-              <th>Address</th>
-              <th>Price</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="myBookingsTbody"></tbody>
-        </table>
-      </div>
+          <div class="form-group">
+            <label for="potteryGlazeSelect">Choose Glaze Finish</label>
+            <select id="potteryGlazeSelect" required></select>
+            <div class="help-text">All glazes are lead-free natural and mineral pigment washes.</div>
+          </div>
 
-      <!-- Orders Sub-section -->
-      <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">My Painting Orders</h3>
-      <div id="myOrdersLoading" class="status-box loading" style="display:none;">
-        <span>⏳ Loading your orders...</span>
-      </div>
-      <div id="myOrdersError" class="status-box error" style="display:none;"></div>
-      <div id="myOrdersEmpty" class="status-box empty" style="display:none;">
-        <p>You haven't bought any paintings yet. <a href="javascript:void(0)" onclick="showTab('paintings')">Browse available paintings</a></p>
-      </div>
-      <div class="data-table-wrapper" id="myOrdersTableWrapper" style="display:none;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Artwork</th>
-              <th>Price</th>
-              <th>Order Date</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="myOrdersTbody"></tbody>
-        </table>
-      </div>
-    </section>
+          <div class="form-group">
+            <label for="potteryQuantity">Quantity (1 to 12 pieces)</label>
+            <input type="number" id="potteryQuantity" min="1" max="12" value="1" required>
+          </div>
 
-    <!-- ======================================================================
-         VIEW 5: Trail Studio Admin Dashboard (Studio Role Only)
-         ====================================================================== -->
-    <section id="viewAdmin" class="view-panel">
-      <div class="section-header">
-        <div>
-          <h2>Trail Studio Dashboard</h2>
-          <p class="help-text">Manage customer pottery commissions, review wall bookings, inspect art orders, and add/edit artworks in the studio catalog.</p>
+          <div class="form-group">
+            <label for="potteryNeededBy">Needed-by Date (At least 14 days away)</label>
+            <input type="date" id="potteryNeededBy" required onchange="validatePotteryDateInput()">
+            <div class="help-text" id="potteryDateHelperText">Pick a date at least 14 days from today for shaping, drying, glazing, and kiln firing.</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="btnSubmitPottery">Submit Pottery Request</button>
+        </form>
+      </section>
+
+      <!-- VIEW 4: My Requests & Orders (Customer View) -->
+      <section id="viewRecords" class="view-panel">
+        <div class="section-header">
+          <div>
+            <h2>My Requests, Bookings & Orders</h2>
+            <p class="help-text">Track your art purchases, wall mural bookings, and custom pottery commissions.</p>
+          </div>
+          <button class="btn" onclick="loadMyRecords()">↻ Refresh My Records</button>
         </div>
-        <button class="btn" onclick="loadAdminData()">↻ Refresh Studio Dashboard</button>
-      </div>
 
-      <div id="adminActionMessage"></div>
+        <div id="recordsActionMessage"></div>
 
-      <!-- Admin: Pottery Requests Management -->
-      <h3 style="font-family: var(--font-serif); margin-bottom: 8px;">All Customer Pottery Requests</h3>
-      <div id="adminPotteryLoading" class="status-box loading" style="display:none;">
-        <span>⏳ Loading all studio pottery requests...</span>
-      </div>
-      <div id="adminPotteryError" class="status-box error" style="display:none;"></div>
-      <div id="adminPotteryEmpty" class="status-box empty" style="display:none;">
-        <p>No customer pottery requests recorded in the system.</p>
-      </div>
-      <div class="data-table-wrapper" id="adminPotteryTableWrapper" style="display:none;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Customer</th>
-              <th>Item</th>
-              <th>Glaze</th>
-              <th>Qty</th>
-              <th>Needed-By</th>
-              <th>Status</th>
-              <th>Studio Decision</th>
-            </tr>
-          </thead>
-          <tbody id="adminPotteryTbody"></tbody>
-        </table>
-      </div>
+        <!-- Custom Pottery Sub-section -->
+        <h3 style="font-family: var(--font-serif); margin-bottom: 8px;">My Custom Pottery Requests</h3>
+        <div id="myPotteryLoading" class="status-box loading" style="display:none;">
+          <span>⏳ Loading your pottery requests...</span>
+        </div>
+        <div id="myPotteryError" class="status-box error" style="display:none;"></div>
+        <div id="myPotteryEmpty" class="status-box empty" style="display:none;">
+          <p>You have not submitted any custom pottery requests yet. <a href="javascript:void(0)" onclick="showTab('pottery')">Request custom pottery</a></p>
+        </div>
+        <div class="data-table-wrapper" id="myPotteryTableWrapper" style="display:none;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Glaze</th>
+                <th>Quantity</th>
+                <th>Needed-By Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="myPotteryTbody"></tbody>
+          </table>
+        </div>
 
-      <!-- Admin: All Wall Bookings Table -->
-      <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">All Customer Wall Bookings</h3>
-      <div id="adminBookingsLoading" class="status-box loading" style="display:none;">
-        <span>⏳ Loading all studio bookings...</span>
-      </div>
-      <div id="adminBookingsError" class="status-box error" style="display:none;"></div>
-      <div id="adminBookingsEmpty" class="status-box empty" style="display:none;">
-        <p>No customer bookings recorded in the system.</p>
-      </div>
-      <div class="data-table-wrapper" id="adminBookingsTableWrapper" style="display:none;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Size</th>
-              <th>Address</th>
-              <th>Price</th>
-              <th>Status</th>
-              <th>Studio Decision</th>
-            </tr>
-          </thead>
-          <tbody id="adminBookingsTbody"></tbody>
-        </table>
-      </div>
+        <!-- Wall Bookings Sub-section -->
+        <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">My Wall Bookings</h3>
+        <div id="myBookingsLoading" class="status-box loading" style="display:none;">
+          <span>⏳ Loading your mural bookings...</span>
+        </div>
+        <div id="myBookingsError" class="status-box error" style="display:none;"></div>
+        <div id="myBookingsEmpty" class="status-box empty" style="display:none;">
+          <p>You have no wall bookings yet. <a href="javascript:void(0)" onclick="showTab('wall')">Book a wall painting</a></p>
+        </div>
+        <div class="data-table-wrapper" id="myBookingsTableWrapper" style="display:none;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Wall Size</th>
+                <th>Address</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="myBookingsTbody"></tbody>
+          </table>
+        </div>
 
-      <!-- Admin: All Orders Table -->
-      <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">All Painting Orders</h3>
-      <div id="adminOrdersLoading" class="status-box loading" style="display:none;">
-        <span>⏳ Loading all studio orders...</span>
-      </div>
-      <div id="adminOrdersError" class="status-box error" style="display:none;"></div>
-      <div id="adminOrdersEmpty" class="status-box empty" style="display:none;">
-        <p>No painting orders recorded yet.</p>
-      </div>
-      <div class="data-table-wrapper" id="adminOrdersTableWrapper" style="display:none;">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Artwork</th>
-              <th>Customer</th>
-              <th>Price</th>
-              <th>Status</th>
-              <th>Date Placed</th>
-            </tr>
-          </thead>
-          <tbody id="adminOrdersTbody"></tbody>
-        </table>
-      </div>
+        <!-- Painting Orders Sub-section -->
+        <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">My Painting Orders</h3>
+        <div id="myOrdersLoading" class="status-box loading" style="display:none;">
+          <span>⏳ Loading your orders...</span>
+        </div>
+        <div id="myOrdersError" class="status-box error" style="display:none;"></div>
+        <div id="myOrdersEmpty" class="status-box empty" style="display:none;">
+          <p>You haven't bought any paintings yet. <a href="javascript:void(0)" onclick="showTab('paintings')">Browse available paintings</a></p>
+        </div>
+        <div class="data-table-wrapper" id="myOrdersTableWrapper" style="display:none;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Artwork</th>
+                <th>Price</th>
+                <th>Order Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="myOrdersTbody"></tbody>
+          </table>
+        </div>
+      </section>
 
-      <!-- Admin: Add New Painting Form -->
-      <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">Add New Artwork to Catalog</h3>
-      <form class="studio-form" id="adminAddPaintingForm" onsubmit="handleAddPainting(event)">
-        <div class="form-group">
-          <label for="newPaintingTitle">Title of Artwork</label>
-          <input type="text" id="newPaintingTitle" placeholder="e.g. Warli Harvest Celebration" required>
+      <!-- VIEW 5: Trail Studio Admin Dashboard (Studio Only) -->
+      <section id="viewAdmin" class="view-panel">
+        <div class="section-header">
+          <div>
+            <h2>Trail Studio Dashboard</h2>
+            <p class="help-text">Manage customer pottery commissions, review wall bookings, inspect art orders, and add artworks in the studio catalog.</p>
+          </div>
+          <button class="btn" onclick="loadAdminData()">↻ Refresh Studio Dashboard</button>
         </div>
-        <div class="form-group">
-          <label for="newPaintingArtist">Artist</label>
-          <input type="text" id="newPaintingArtist" placeholder="e.g. Anjali Deshmukh">
+
+        <div id="adminActionMessage"></div>
+
+        <!-- Pottery Requests Management -->
+        <h3 style="font-family: var(--font-serif); margin-bottom: 8px;">All Customer Pottery Requests</h3>
+        <div id="adminPotteryLoading" class="status-box loading" style="display:none;">
+          <span>⏳ Loading all studio pottery requests...</span>
         </div>
-        <div class="form-group">
-          <label for="newPaintingPrice">Price (₹ INR)</label>
-          <input type="number" id="newPaintingPrice" min="1" placeholder="8500" required>
+        <div id="adminPotteryError" class="status-box error" style="display:none;"></div>
+        <div id="adminPotteryEmpty" class="status-box empty" style="display:none;">
+          <p>No customer pottery requests recorded in the system.</p>
         </div>
-        <div class="form-group">
-          <label for="newPaintingDesc">Description / Art Style</label>
-          <textarea id="newPaintingDesc" rows="2" placeholder="e.g. Traditional natural pigments on handmade tussar silk, 50 x 70 cm."></textarea>
+        <div class="data-table-wrapper" id="adminPotteryTableWrapper" style="display:none;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Item</th>
+                <th>Glaze</th>
+                <th>Qty</th>
+                <th>Needed-By</th>
+                <th>Status</th>
+                <th>Studio Decision</th>
+              </tr>
+            </thead>
+            <tbody id="adminPotteryTbody"></tbody>
+          </table>
         </div>
-        <div class="form-group">
-          <label for="newPaintingImage">Image URL (Optional)</label>
-          <input type="text" id="newPaintingImage" placeholder="images/p-001.jpg">
+
+        <!-- All Wall Bookings Table -->
+        <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">All Customer Wall Bookings</h3>
+        <div id="adminBookingsLoading" class="status-box loading" style="display:none;">
+          <span>⏳ Loading all studio bookings...</span>
         </div>
-        <button type="submit" class="btn btn-primary" id="btnAddPainting">Add to Trail Studio</button>
-      </form>
-    </section>
+        <div id="adminBookingsError" class="status-box error" style="display:none;"></div>
+        <div id="adminBookingsEmpty" class="status-box empty" style="display:none;">
+          <p>No customer bookings recorded in the system.</p>
+        </div>
+        <div class="data-table-wrapper" id="adminBookingsTableWrapper" style="display:none;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Size</th>
+                <th>Address</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Studio Decision</th>
+              </tr>
+            </thead>
+            <tbody id="adminBookingsTbody"></tbody>
+          </table>
+        </div>
+
+        <!-- All Orders Table -->
+        <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">All Painting Orders</h3>
+        <div id="adminOrdersLoading" class="status-box loading" style="display:none;">
+          <span>⏳ Loading all studio orders...</span>
+        </div>
+        <div id="adminOrdersError" class="status-box error" style="display:none;"></div>
+        <div id="adminOrdersEmpty" class="status-box empty" style="display:none;">
+          <p>No painting orders recorded yet.</p>
+        </div>
+        <div class="data-table-wrapper" id="adminOrdersTableWrapper" style="display:none;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Artwork</th>
+                <th>Customer</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Date Placed</th>
+              </tr>
+            </thead>
+            <tbody id="adminOrdersTbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Add New Painting Form -->
+        <h3 style="font-family: var(--font-serif); margin-top: 32px; margin-bottom: 8px;">Add New Artwork to Catalog</h3>
+        <form class="studio-form" id="adminAddPaintingForm" onsubmit="handleAddPainting(event)">
+          <div class="form-group">
+            <label for="newPaintingTitle">Title of Artwork</label>
+            <input type="text" id="newPaintingTitle" placeholder="e.g. Warli Harvest Celebration" required>
+          </div>
+          <div class="form-group">
+            <label for="newPaintingArtist">Artist</label>
+            <input type="text" id="newPaintingArtist" placeholder="e.g. Anjali Deshmukh">
+          </div>
+          <div class="form-group">
+            <label for="newPaintingPrice">Price (₹ INR)</label>
+            <input type="number" id="newPaintingPrice" min="1" placeholder="8500" required>
+          </div>
+          <div class="form-group">
+            <label for="newPaintingDesc">Description / Art Style</label>
+            <textarea id="newPaintingDesc" rows="2" placeholder="e.g. Traditional natural pigments on handmade tussar silk, 50 x 70 cm."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="newPaintingImage">Image URL (Optional)</label>
+            <input type="text" id="newPaintingImage" placeholder="images/p-001.jpg">
+          </div>
+          <button type="submit" class="btn btn-primary" id="btnAddPainting">Add to Trail Studio</button>
+        </form>
+      </section>
+    </div>
 
     <!-- Modal for Editing Pottery Request -->
     <div id="editPotteryModal" class="modal-overlay" style="display:none;">
@@ -875,7 +960,7 @@
           </div>
           <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
             <button type="button" class="btn" onclick="closeEditPotteryModal()">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="submit" class="btn btn-primary" id="btnSavePotteryEdit">Save Changes</button>
           </div>
         </form>
       </div>
@@ -906,7 +991,7 @@
           </div>
           <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
             <button type="button" class="btn" onclick="closeEditPaintingModal()">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Painting</button>
+            <button type="submit" class="btn btn-primary" id="btnSavePaintingEdit">Save Painting</button>
           </div>
         </form>
       </div>
@@ -919,32 +1004,47 @@
     </footer>
   </div>
 
-  <!-- Client Logic -->
+  <!-- Vanilla Client Logic -->
   <script>
-    let currentUser = {
-      email: 'alice@example.com',
-      role: 'customer'
-    };
+    let authToken = localStorage.getItem('trail_studio_token') || null;
+    let currentUser = null;
+
+    try {
+      const storedUser = localStorage.getItem('trail_studio_user');
+      if (storedUser) currentUser = JSON.parse(storedUser);
+    } catch (e) {
+      currentUser = null;
+    }
 
     let ratePerSqFt = 150;
     let currencySymbol = '₹';
     let potteryItems = [];
     let glazes = [];
     let cachedPaintings = [];
+    let cachedCustomerPottery = [];
 
     window.addEventListener('DOMContentLoaded', async () => {
-      const savedEmail = localStorage.getItem('trail_studio_email');
-      const savedRole = localStorage.getItem('trail_studio_role');
-      if (savedEmail && savedRole) {
-        currentUser.email = savedEmail;
-        currentUser.role = savedRole;
-      }
-
       await fetchConfig();
       setupDateRangeConstraints();
       setupPotteryOptions();
-      updateSessionUI();
-      loadPaintings();
+
+      if (authToken && currentUser) {
+        // Verify token with server
+        try {
+          const res = await fetch('/api/auth/me', { headers: getAuthHeaders() });
+          if (res.ok) {
+            const data = await res.json();
+            currentUser = data.user;
+            showAuthenticatedUI();
+          } else {
+            handleLogout();
+          }
+        } catch (e) {
+          showAuthenticatedUI();
+        }
+      } else {
+        showAuthView();
+      }
     });
 
     async function fetchConfig() {
@@ -977,7 +1077,7 @@
       if (editItemSelect) editItemSelect.innerHTML = itemOptions;
       if (editGlazeSelect) editGlazeSelect.innerHTML = glazeOptions;
 
-      // Set min date for pottery (14 days from today)
+      // Minimum 14-day lead time for pottery
       const potteryDateInput = document.getElementById('potteryNeededBy');
       const editPotteryDateInput = document.getElementById('editPotteryNeededBy');
       const minDate = new Date();
@@ -989,13 +1089,27 @@
     }
 
     function getAuthHeaders() {
-      return {
-        'Content-Type': 'application/json',
-        'x-user-email': currentUser.email
-      };
+      const headers = { 'Content-Type': 'application/json' };
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+      return headers;
     }
 
-    function updateSessionUI() {
+    // ========================================================================
+    // Authentication View Handling
+    // ========================================================================
+    function showAuthView() {
+      document.getElementById('viewAuth').style.display = 'block';
+      document.getElementById('sessionBar').style.display = 'none';
+      document.getElementById('appContent').style.display = 'none';
+    }
+
+    function showAuthenticatedUI() {
+      document.getElementById('viewAuth').style.display = 'none';
+      document.getElementById('sessionBar').style.display = 'flex';
+      document.getElementById('appContent').style.display = 'block';
+
       document.getElementById('sessionEmail').textContent = currentUser.email;
       const roleBadge = document.getElementById('sessionRole');
       roleBadge.textContent = currentUser.role;
@@ -1013,59 +1127,139 @@
         tabWallBtn.style.display = 'none';
         tabPotteryBtn.style.display = 'none';
         tabMyRecordsBtn.style.display = 'none';
-        const currentActive = document.querySelector('.tab-btn.active');
-        if (currentActive && (currentActive.id === 'tabWallBtn' || currentActive.id === 'tabPotteryBtn' || currentActive.id === 'tabMyRecordsBtn')) {
-          showTab('admin');
-        }
+        showTab('paintings');
       } else {
         tabAdminBtn.style.display = 'none';
         tabWallBtn.style.display = 'inline-block';
         tabPotteryBtn.style.display = 'inline-block';
         tabMyRecordsBtn.style.display = 'inline-block';
-        const currentActive = document.querySelector('.tab-btn.active');
-        if (currentActive && currentActive.id === 'tabAdminBtn') {
-          showTab('paintings');
-        }
+        showTab('paintings');
+      }
+
+      loadPaintings();
+    }
+
+    function toggleAuthMode(mode) {
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      const tabLoginBtn = document.getElementById('tabLoginBtn');
+      const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+      document.getElementById('authMessage').innerHTML = '';
+
+      if (mode === 'login') {
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        tabLoginBtn.classList.add('active');
+        tabRegisterBtn.classList.remove('active');
+      } else {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        tabLoginBtn.classList.remove('active');
+        tabRegisterBtn.classList.add('active');
       }
     }
 
-    async function switchUser(email, role) {
+    function fillDemoAccount(email, password) {
+      toggleAuthMode('login');
+      document.getElementById('loginEmail').value = email;
+      document.getElementById('loginPassword').value = password;
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnLoginSubmit');
+      const msgBox = document.getElementById('authMessage');
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      btn.disabled = true;
+      btn.textContent = 'Signing In...';
+      msgBox.innerHTML = '';
+
       try {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, role })
+          body: JSON.stringify({ email, password }),
         });
-        const data = await res.json();
-        if (res.ok && data.user) {
-          currentUser.email = data.user.email;
-          currentUser.role = data.user.role;
-          localStorage.setItem('trail_studio_email', currentUser.email);
-          localStorage.setItem('trail_studio_role', currentUser.role);
-          updateSessionUI();
-          showNotification(`Switched user to ${currentUser.email} (${currentUser.role})`, 'success');
 
-          const activePanel = document.querySelector('.view-panel.active');
-          if (activePanel) {
-            if (activePanel.id === 'viewPaintings') loadPaintings();
-            if (activePanel.id === 'viewRecords') loadMyRecords();
-            if (activePanel.id === 'viewAdmin') loadAdminData();
-          }
+        const data = await res.json();
+        if (res.ok && data.token) {
+          authToken = data.token;
+          currentUser = data.user;
+          localStorage.setItem('trail_studio_token', authToken);
+          localStorage.setItem('trail_studio_user', JSON.stringify(currentUser));
+          showNotification(`Signed in as ${currentUser.email} (${currentUser.role})`, 'success');
+          showAuthenticatedUI();
+        } else {
+          msgBox.innerHTML = `<div class="status-box error">${data.error || 'Login failed.'}</div>`;
         }
-      } catch (e) {
-        showNotification('Failed to switch user: ' + e.message, 'error');
+      } catch (err) {
+        msgBox.innerHTML = `<div class="status-box error">Network error: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
       }
     }
 
+    async function handleRegisterSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnRegisterSubmit');
+      const msgBox = document.getElementById('authMessage');
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+
+      btn.disabled = true;
+      btn.textContent = 'Creating Account...';
+      msgBox.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data.token) {
+          authToken = data.token;
+          currentUser = data.user;
+          localStorage.setItem('trail_studio_token', authToken);
+          localStorage.setItem('trail_studio_user', JSON.stringify(currentUser));
+          showNotification(`Welcome! Account created for ${currentUser.email}`, 'success');
+          showAuthenticatedUI();
+        } else {
+          msgBox.innerHTML = `<div class="status-box error">${data.error || 'Registration failed.'}</div>`;
+        }
+      } catch (err) {
+        msgBox.innerHTML = `<div class="status-box error">Network error: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    }
+
+    function handleLogout() {
+      authToken = null;
+      currentUser = null;
+      localStorage.removeItem('trail_studio_token');
+      localStorage.removeItem('trail_studio_user');
+      showNotification('You have logged out.', 'info');
+      showAuthView();
+    }
+
+    // ========================================================================
+    // Navigation & Notifications
+    // ========================================================================
     function showTab(tabName) {
-      const tabs = document.querySelectorAll('.tab-btn');
+      const tabs = document.querySelectorAll('.nav-tabs .tab-btn');
       tabs.forEach(t => t.classList.remove('active'));
 
       const panels = document.querySelectorAll('.view-panel');
       panels.forEach(p => p.classList.remove('active'));
 
       if (tabName === 'paintings') {
-        tabs[0].classList.add('active');
+        document.getElementById('tabPaintingsBtn').classList.add('active');
         document.getElementById('viewPaintings').classList.add('active');
         loadPaintings();
       } else if (tabName === 'wall') {
@@ -1097,7 +1291,7 @@
     }
 
     // ========================================================================
-    // Paintings: Load, Buy, Studio Edit
+    // Paintings: Load, Buy & Studio Edit
     // ========================================================================
     async function loadPaintings() {
       const loading = document.getElementById('paintingsLoading');
@@ -1112,8 +1306,13 @@
 
       try {
         const res = await fetch('/api/paintings', {
-          headers: getAuthHeaders()
+          headers: getAuthHeaders(),
         });
+
+        if (res.status === 401) {
+          handleLogout();
+          return;
+        }
 
         const data = await res.json();
         loading.style.display = 'none';
@@ -1132,13 +1331,13 @@
         cachedPaintings = data;
 
         grid.innerHTML = data.map(p => {
-          const isCustomer = currentUser.role === 'customer';
-          const isStudio = currentUser.role === 'admin' || currentUser.role === 'studio';
+          const isCustomer = currentUser && currentUser.role === 'customer';
+          const isStudio = currentUser && (currentUser.role === 'admin' || currentUser.role === 'studio');
 
           let actionButtons = '';
           if (p.isAvailable) {
             if (isCustomer) {
-              actionButtons = `<button class="btn btn-primary btn-sm" onclick="buyPainting('${p._id}', '${escapeHtml(p.title)}')">Buy Artwork</button>`;
+              actionButtons = `<button class="btn btn-primary btn-sm" onclick="buyPainting('${p._id}', '${escapeHtml(p.title)}', this)">Buy Artwork</button>`;
             } else if (isStudio) {
               actionButtons = `<button class="btn btn-sm" onclick="openEditPaintingModal('${p._id}')">Edit</button>`;
             }
@@ -1173,17 +1372,21 @@
       }
     }
 
-    async function buyPainting(id, title) {
-      if (!confirm(`Confirm purchase of "${title}"?`)) return;
+    async function buyPainting(id, title, btnElement) {
+      if (!confirm(`Are you sure you want to purchase "${title}"?`)) return;
+
+      if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.textContent = 'Purchasing...';
+      }
 
       try {
         const res = await fetch(`/api/paintings/${id}/buy`, {
           method: 'POST',
-          headers: getAuthHeaders()
+          headers: getAuthHeaders(),
         });
 
         const data = await res.json();
-
         if (res.ok) {
           showNotification(`✓ Success: You purchased "${title}"!`, 'success');
           loadPaintings();
@@ -1193,6 +1396,11 @@
         }
       } catch (err) {
         showNotification('Error processing purchase: ' + err.message, 'error');
+      } finally {
+        if (btnElement) {
+          btnElement.disabled = false;
+          btnElement.textContent = 'Buy Artwork';
+        }
       }
     }
 
@@ -1215,6 +1423,7 @@
 
     async function handleSavePaintingEdit(e) {
       e.preventDefault();
+      const btn = document.getElementById('btnSavePaintingEdit');
       const id = document.getElementById('editPaintingId').value;
       const title = document.getElementById('editPaintingTitle').value;
       const price = Number(document.getElementById('editPaintingPrice').value);
@@ -1222,11 +1431,14 @@
       const description = document.getElementById('editPaintingDesc').value;
       const msgBox = document.getElementById('editPaintingMessage');
 
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
       try {
         const res = await fetch(`/api/paintings/${id}`, {
           method: 'PATCH',
           headers: getAuthHeaders(),
-          body: JSON.stringify({ title, price, artist, description })
+          body: JSON.stringify({ title, price, artist, description }),
         });
 
         const data = await res.json();
@@ -1239,11 +1451,14 @@
         }
       } catch (err) {
         msgBox.innerHTML = `<div class="status-box error">Error: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Painting';
       }
     }
 
     // ========================================================================
-    // Wall Booking
+    // Wall Booking (Customer)
     // ========================================================================
     function setupDateRangeConstraints() {
       const dateInput = document.getElementById('bookingDate');
@@ -1317,13 +1532,10 @@
         const res = await fetch('/api/bookings', {
           method: 'POST',
           headers: getAuthHeaders(),
-          body: JSON.stringify({ date, size, address })
+          body: JSON.stringify({ date, size, address }),
         });
 
         const data = await res.json();
-        btn.disabled = false;
-        btn.textContent = 'Request Wall Booking';
-
         if (res.ok) {
           msgBox.innerHTML = `
             <div class="status-box success">
@@ -1339,14 +1551,15 @@
             </div>`;
         }
       } catch (err) {
+        msgBox.innerHTML = `<div class="status-box error">Error submitting request: ${err.message}</div>`;
+      } finally {
         btn.disabled = false;
         btn.textContent = 'Request Wall Booking';
-        msgBox.innerHTML = `<div class="status-box error">Error submitting request: ${err.message}</div>`;
       }
     }
 
     // ========================================================================
-    // Custom Pottery: Form & Handlers
+    // Custom Pottery (Customer)
     // ========================================================================
     function validatePotteryDateInput() {
       const dateInput = document.getElementById('potteryNeededBy');
@@ -1383,13 +1596,10 @@
         const res = await fetch('/api/pottery', {
           method: 'POST',
           headers: getAuthHeaders(),
-          body: JSON.stringify({ itemId, glazeId, quantity, neededBy })
+          body: JSON.stringify({ itemId, glazeId, quantity, neededBy }),
         });
 
         const data = await res.json();
-        btn.disabled = false;
-        btn.textContent = 'Submit Pottery Request';
-
         if (res.ok) {
           const itemObj = potteryItems.find(i => i.id === data.request.itemId);
           const glazeObj = glazes.find(g => g.id === data.request.glazeId);
@@ -1409,9 +1619,10 @@
             </div>`;
         }
       } catch (err) {
+        msgBox.innerHTML = `<div class="status-box error">Error submitting request: ${err.message}</div>`;
+      } finally {
         btn.disabled = false;
         btn.textContent = 'Submit Pottery Request';
-        msgBox.innerHTML = `<div class="status-box error">Error submitting request: ${err.message}</div>`;
       }
     }
 
@@ -1421,8 +1632,6 @@
     async function loadMyRecords() {
       await Promise.all([loadMyPotteryRequests(), loadMyBookings(), loadMyOrders()]);
     }
-
-    let cachedCustomerPottery = [];
 
     async function loadMyPotteryRequests() {
       const loading = document.getElementById('myPotteryLoading');
@@ -1466,7 +1675,7 @@
             actionButtons = `
               <div style="display:flex; gap:6px;">
                 <button class="btn btn-sm" onclick="openEditPotteryModal('${req._id}')">Edit</button>
-                <button class="btn btn-danger btn-sm" onclick="cancelPotteryRequest('${req._id}')">Cancel</button>
+                <button class="btn btn-danger btn-sm" onclick="cancelPotteryRequest('${req._id}', this)">Cancel</button>
               </div>
             `;
           }
@@ -1511,6 +1720,7 @@
 
     async function handleSavePotteryEdit(e) {
       e.preventDefault();
+      const btn = document.getElementById('btnSavePotteryEdit');
       const id = document.getElementById('editPotteryId').value;
       const itemId = document.getElementById('editPotteryItem').value;
       const glazeId = document.getElementById('editPotteryGlaze').value;
@@ -1518,11 +1728,14 @@
       const neededBy = document.getElementById('editPotteryNeededBy').value;
       const msgBox = document.getElementById('editPotteryMessage');
 
+      btn.disabled = true;
+      btn.textContent = 'Saving...';
+
       try {
         const res = await fetch(`/api/pottery/${id}`, {
           method: 'PATCH',
           headers: getAuthHeaders(),
-          body: JSON.stringify({ itemId, glazeId, quantity, neededBy })
+          body: JSON.stringify({ itemId, glazeId, quantity, neededBy }),
         });
 
         const data = await res.json();
@@ -1535,16 +1748,24 @@
         }
       } catch (err) {
         msgBox.innerHTML = `<div class="status-box error">Error updating request: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Save Changes';
       }
     }
 
-    async function cancelPotteryRequest(id) {
+    async function cancelPotteryRequest(id, btnElement) {
       if (!confirm('Are you sure you want to cancel this custom pottery request?')) return;
+
+      if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.textContent = 'Cancelling...';
+      }
 
       try {
         const res = await fetch(`/api/pottery/${id}/cancel`, {
           method: 'PATCH',
-          headers: getAuthHeaders()
+          headers: getAuthHeaders(),
         });
 
         const data = await res.json();
@@ -1556,6 +1777,11 @@
         }
       } catch (err) {
         showNotification('Error cancelling pottery request: ' + err.message, 'error', 'recordsActionMessage');
+      } finally {
+        if (btnElement) {
+          btnElement.disabled = false;
+          btnElement.textContent = 'Cancel';
+        }
       }
     }
 
@@ -1597,7 +1823,7 @@
 
           let actionContent = '-';
           if (canCancel) {
-            actionContent = `<button class="btn btn-danger btn-sm" onclick="cancelBooking('${b._id}')">Cancel Booking</button>`;
+            actionContent = `<button class="btn btn-danger btn-sm" onclick="cancelBooking('${b._id}', this)">Cancel Booking</button>`;
           } else if (b.status === 'requested' || b.status === 'confirmed') {
             actionContent = `<span class="help-text">Within 3-day window</span>`;
           }
@@ -1621,13 +1847,18 @@
       }
     }
 
-    async function cancelBooking(id) {
+    async function cancelBooking(id, btnElement) {
       if (!confirm('Are you sure you want to cancel this wall booking? The reserved date will be released.')) return;
+
+      if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.textContent = 'Cancelling...';
+      }
 
       try {
         const res = await fetch(`/api/bookings/${id}/cancel`, {
           method: 'PATCH',
-          headers: getAuthHeaders()
+          headers: getAuthHeaders(),
         });
 
         const data = await res.json();
@@ -1639,6 +1870,11 @@
         }
       } catch (err) {
         showNotification('Error cancelling booking: ' + err.message, 'error', 'recordsActionMessage');
+      } finally {
+        if (btnElement) {
+          btnElement.disabled = false;
+          btnElement.textContent = 'Cancel Booking';
+        }
       }
     }
 
@@ -1678,7 +1914,7 @@
           const canCancel = o.status === 'placed';
 
           const actionBtn = canCancel
-            ? `<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o._id}')">Cancel Order</button>`
+            ? `<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o._id}', this)">Cancel Order</button>`
             : '-';
 
           return `
@@ -1699,13 +1935,18 @@
       }
     }
 
-    async function cancelOrder(id) {
+    async function cancelOrder(id, btnElement) {
       if (!confirm('Cancel this order? The artwork will become available in the Trail Studio catalog again.')) return;
+
+      if (btnElement) {
+        btnElement.disabled = true;
+        btnElement.textContent = 'Cancelling...';
+      }
 
       try {
         const res = await fetch(`/api/orders/${id}/cancel`, {
           method: 'PATCH',
-          headers: getAuthHeaders()
+          headers: getAuthHeaders(),
         });
 
         const data = await res.json();
@@ -1718,14 +1959,19 @@
         }
       } catch (err) {
         showNotification('Error cancelling order: ' + err.message, 'error', 'recordsActionMessage');
+      } finally {
+        if (btnElement) {
+          btnElement.disabled = false;
+          btnElement.textContent = 'Cancel Order';
+        }
       }
     }
 
     // ========================================================================
-    // Trail Studio Dashboard: Pottery, Wall Bookings, Orders & Add Painting
+    // Trail Studio Dashboard (Studio Only)
     // ========================================================================
     async function loadAdminData() {
-      const isStudio = currentUser.role === 'admin' || currentUser.role === 'studio';
+      const isStudio = currentUser && (currentUser.role === 'admin' || currentUser.role === 'studio');
       if (!isStudio) return;
       await Promise.all([loadAdminPottery(), loadAdminBookings(), loadAdminOrders()]);
     }
@@ -1769,8 +2015,8 @@
           if (req.status === 'requested') {
             decisionButtons = `
               <div style="display:flex; gap:4px;">
-                <button class="btn btn-primary btn-sm" onclick="setPotteryStatus('${req._id}', 'accepted')">Accept</button>
-                <button class="btn btn-danger btn-sm" onclick="setPotteryStatus('${req._id}', 'declined')">Decline</button>
+                <button class="btn btn-primary btn-sm" onclick="setPotteryStatus('${req._id}', 'accepted', this)">Accept</button>
+                <button class="btn btn-danger btn-sm" onclick="setPotteryStatus('${req._id}', 'declined', this)">Decline</button>
               </div>
             `;
           }
@@ -1795,12 +2041,14 @@
       }
     }
 
-    async function setPotteryStatus(id, newStatus) {
+    async function setPotteryStatus(id, newStatus, btnElement) {
+      if (btnElement) btnElement.disabled = true;
+
       try {
         const res = await fetch(`/api/pottery/${id}/status`, {
           method: 'PATCH',
           headers: getAuthHeaders(),
-          body: JSON.stringify({ status: newStatus })
+          body: JSON.stringify({ status: newStatus }),
         });
 
         const data = await res.json();
@@ -1812,6 +2060,8 @@
         }
       } catch (err) {
         showNotification('Error updating pottery request: ' + err.message, 'error', 'adminActionMessage');
+      } finally {
+        if (btnElement) btnElement.disabled = false;
       }
     }
 
@@ -1852,8 +2102,8 @@
           if (b.status === 'requested') {
             decisionButtons = `
               <div style="display:flex; gap:4px;">
-                <button class="btn btn-primary btn-sm" onclick="setBookingStatus('${b._id}', 'confirmed')">Confirm</button>
-                <button class="btn btn-danger btn-sm" onclick="setBookingStatus('${b._id}', 'declined')">Decline</button>
+                <button class="btn btn-primary btn-sm" onclick="setBookingStatus('${b._id}', 'confirmed', this)">Confirm</button>
+                <button class="btn btn-danger btn-sm" onclick="setBookingStatus('${b._id}', 'declined', this)">Decline</button>
               </div>
             `;
           }
@@ -1878,12 +2128,14 @@
       }
     }
 
-    async function setBookingStatus(id, newStatus) {
+    async function setBookingStatus(id, newStatus, btnElement) {
+      if (btnElement) btnElement.disabled = true;
+
       try {
         const res = await fetch(`/api/bookings/${id}/status`, {
           method: 'PATCH',
           headers: getAuthHeaders(),
-          body: JSON.stringify({ status: newStatus })
+          body: JSON.stringify({ status: newStatus }),
         });
 
         const data = await res.json();
@@ -1895,6 +2147,8 @@
         }
       } catch (err) {
         showNotification('Error updating booking: ' + err.message, 'error', 'adminActionMessage');
+      } finally {
+        if (btnElement) btnElement.disabled = false;
       }
     }
 
@@ -1970,13 +2224,10 @@
         const res = await fetch('/api/paintings', {
           method: 'POST',
           headers: getAuthHeaders(),
-          body: JSON.stringify({ title, artist, price, description, imageUrl })
+          body: JSON.stringify({ title, artist, price, description, imageUrl }),
         });
 
         const data = await res.json();
-        btn.disabled = false;
-        btn.textContent = 'Add to Trail Studio';
-
         if (res.ok) {
           msgBox.innerHTML = `<div class="status-box success">✓ Artwork "${data.painting.title}" added to Trail Studio!</div>`;
           document.getElementById('adminAddPaintingForm').reset();
@@ -1985,9 +2236,10 @@
           msgBox.innerHTML = `<div class="status-box error">⚠️ Failed to add painting: ${data.error}</div>`;
         }
       } catch (err) {
+        msgBox.innerHTML = `<div class="status-box error">Error adding painting: ${err.message}</div>`;
+      } finally {
         btn.disabled = false;
         btn.textContent = 'Add to Trail Studio';
-        msgBox.innerHTML = `<div class="status-box error">Error adding painting: ${err.message}</div>`;
       }
     }
 
@@ -1998,7 +2250,7 @@
       return d.toLocaleDateString('en-IN', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
       });
     }
 
