@@ -160,10 +160,5 @@
   ],
   "mural": {
     "ratePerSqFt": 150
-  },
-  "studioAccount": {
-    "email": "studio@artstudio.in",
-    "password": "Studio@123",
-    "role": "studio"
   }
 }

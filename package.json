@@ -7,7 +7,8 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "seed": "node models/db.js --seed",
-    "test": "node test_api.js"
+    "test": "node test_api.js",
+    "setup-accounts": "node scripts/setupAccounts.js"
   },
   "keywords": [
     "trail-studio",

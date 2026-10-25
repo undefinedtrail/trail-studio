@@ -256,6 +256,8 @@ function normalizeDate(input) {
 
 // ============================================================================
 // 4. Default Seed Data Helper (Uses seed.json)
+// Only seeds catalog paintings if the collection is empty.
+// Does NOT modify or overwrite user accounts on server start.
 // ============================================================================
 async function seedDefaults() {
   try {
@@ -267,32 +269,7 @@ async function seedDefaults() {
       seedData = JSON.parse(raw);
     }
 
-    // Seed or update default studio and customer accounts with valid hashed passwords
-    const studioEmail = (seedData && seedData.studioAccount && seedData.studioAccount.email)
-      ? seedData.studioAccount.email.toLowerCase()
-      : 'studio@artstudio.in';
-    const studioPass = (seedData && seedData.studioAccount && seedData.studioAccount.password)
-      ? seedData.studioAccount.password
-      : 'Studio@123';
-
-    const defaultAccounts = [
-      { email: studioEmail, role: 'studio', password: studioPass },
-      { email: 'alice@example.com', role: 'customer', password: 'Customer@123' },
-      { email: 'bob@example.com', role: 'customer', password: 'Customer@123' },
-    ];
-
-    for (const acc of defaultAccounts) {
-      let existing = await User.findOne({ email: acc.email });
-      if (!existing) {
-        const u = new User(acc);
-        await u.save();
-      } else if (!existing.password || !existing.password.startsWith('$2')) {
-        existing.password = acc.password;
-        await existing.save(); // pre-save hook will hash it with bcrypt
-      }
-    }
-
-    // Seed paintings from seed.json
+    // Seed paintings from seed.json if not present
     const paintingCount = await Painting.countDocuments();
     if (paintingCount === 0 && seedData && Array.isArray(seedData.paintings)) {
       console.log('[Seed] Seeding paintings from seed.json...');
