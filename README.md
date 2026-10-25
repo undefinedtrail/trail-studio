@@ -1,8 +1,8 @@
 # Trail Studio
 
-Trail Studio is a full-stack web application built for an art studio. It lets customers browse and buy unique folk paintings, book on-site wall murals, and request custom handmade pottery. It also gives the studio an admin dashboard to review and manage all requests.
+Trail Studio is a full-stack artisan web application built for a traditional art and craft studio. It lets customers browse and purchase original Indian folk paintings, commission on-site architectural wall murals, and request custom handmade pottery. It also provides the studio administrator with a dedicated dashboard to manage catalog inventory, review incoming orders, and make decisions on mural bookings and pottery requests.
 
-Built with **Node.js**, **Express**, **MongoDB (Mongoose)**, and a simple vanilla HTML and JavaScript frontend.
+Built with **Node.js**, **Express**, **MongoDB (Mongoose)**, and a clean, modular HTML, CSS, and vanilla JavaScript frontend.
 
 GitHub Repository: [https://github.com/undefinedtrail/trail-studio](https://github.com/undefinedtrail/trail-studio)
 
@@ -10,60 +10,61 @@ GitHub Repository: [https://github.com/undefinedtrail/trail-studio](https://gith
 
 ## What the Studio Offers
 
-### 1. Folk Paintings
-- **Authentic Catalog**: 12 traditional Indian folk paintings loaded directly from the provided seed data (`seed.json`), complete with artwork photos, artist credits, and prices in rupees.
-- **One of a Kind**: Each painting is unique and can only be bought once.
-- **Safe Buying**: The server checks availability directly in MongoDB in a single step so two people clicking "Buy" at the exact same moment cannot both get it.
-- **Order Cancellation**: If a customer cancels an order, the painting becomes available again in the shop.
-- **Studio Controls**: Studio accounts can add new paintings or change details of an available painting.
+### 1. Artisan Folk Paintings
+- **Authentic Collection**: Original Indian folk paintings loaded directly from the provided seed dataset (`seed.json`), featuring Madhubani, Warli, Tanjore, Pattachitra, Kalamkari, Gond, and Cheriyal styles with artist credits and rupee prices.
+- **One of a Kind**: Each painting is an original piece and can only be bought once.
+- **Safe Purchasing**: The server verifies painting availability atomically directly in MongoDB, so two customers clicking purchase at the exact same moment can never both acquire the same painting.
+- **Order Cancellation**: If a customer cancels an order, the painting is automatically released back to available stock.
+- **Studio Inventory Control**: Administrators can add new paintings and update details for available artworks.
 
-### 2. Wall Murals
-- **Booking Rules**: Customers can pick a date between 7 and 90 days away, choose a wall size between 10 and 500 square feet, and give an address.
-- **Fair Pricing**: The price is automatically calculated as wall size multiplied by the studio rate (₹150 per sq ft from seed data).
-- **No Double-Booking**: Each calendar date can only have one active booking. A database index stops anyone from taking an already booked date.
-- **Studio Decisions**: The studio can confirm or decline a requested booking.
-- **Easy Cancellation**: Customers can cancel their booking up to 3 days before the date, which frees up the date on the calendar for someone else.
+### 2. Architectural Wall Murals
+- **Booking Rules**: Customers select an execution date between 7 and 90 days in advance, specify wall size between 10 and 500 square feet, and provide the site address.
+- **Transparent Pricing**: The price is calculated in real time as wall size multiplied by the studio rate (₹150 per sq ft from seed data).
+- **Date Reservation & Conflict Prevention**: Each calendar date can have only one active booking. A database index prevents double-booking the same date even under simultaneous submissions.
+- **Studio Decisions**: Administrators can review, confirm, or decline mural requests.
+- **Customer Cancellation**: Customers can cancel their booking, which immediately releases the calendar date for other customers.
 
-### 3. Custom Pottery
-- **Seed Options**: Customers can pick from 5 clay items (`Kulhad`, `Surahi`, `Matka`, `Diya set`, `Gamla`) and 6 natural glazes from the seed data.
-- **Order Limits**: Quantity is between 1 and 12 pieces, and the date needed must be at least 14 days away to allow enough time to craft and kiln-fire the clay.
-- **Studio Decisions**: The studio reviews and can accept or decline the request.
-- **Editing & Cancelling**: Customers can edit or cancel their pottery request as long as it is still in `requested` status. Once accepted or declined by the studio, it is locked.
+### 3. Custom Handmade Pottery
+- **Seed Catalog**: Customers select from traditional earthenware shapes (`Kulhad`, `Surahi`, `Matka`, `Diya set`, `Gamla`) and natural mineral glazes from the seed data.
+- **Order Quantities & Timeline**: Quantity is between 1 and 12 pieces, and the requested completion date must be at least 14 days in advance to allow proper wheel throwing, sun curing, and kiln firing.
+- **Studio Decisions**: Administrators can accept or decline pottery commission requests.
+- **Customer Modifications**: Customers can edit details or cancel requests while they remain in `requested` status. Once accepted or declined, the request is finalized.
 
 ---
 
 ## User Roles and Security
 
-The app has two roles:
-1. **Customer**: Can register, browse and buy paintings, book mural dates, request custom pottery, and manage their own orders.
-2. **Studio / Admin**: Can see all submissions, confirm or decline bookings, accept or decline pottery requests, and add or edit available paintings.
+The application supports two distinct roles:
+1. **Customer**: Can create an account, browse and buy paintings, commission murals, request custom pottery, and manage their own orders and bookings.
+2. **Administrator / Studio**: Can view all orders and submissions, approve or decline mural bookings, accept or decline pottery commissions, and add or edit gallery inventory.
 
-Every request to a protected route is checked by the server:
-- If a user is not logged in, they receive `401 Unauthorized`.
-- If someone tries an action for the wrong role (like a customer trying to approve a booking, or the studio trying to buy a painting), they receive `403 Forbidden`.
-- If a customer tries to look at or edit another customer's booking or request, the server returns `404 Not Found` for privacy.
+Security and access rules enforced on every server request:
+- **Authentication**: Protected endpoints require a valid signed JSON Web Token (JWT) passed in the `Authorization: Bearer <token>` header. Unauthenticated requests receive `401 Unauthorized`.
+- **Role Permissions**: Role-restricted actions (such as adding paintings or deciding on commissions) return `403 Forbidden` if attempted by an unauthorized role.
+- **Customer Privacy**: If a customer attempts to inspect or modify another customer's booking or pottery request, the server returns `404 Not Found` for privacy protection.
+- **Startup Protection**: The server checks for a configured `JWT_SECRET` on launch and exits with a clear error message if it is missing.
 
 ---
 
-## How to Run on a Clean Machine
+## How to Set Up and Run on a Clean Machine
 
 ### Requirements
 - **Node.js** (v18 or newer)
-- **MongoDB** (running locally on port 27017 or a cloud MongoDB Atlas connection)
+- **MongoDB** (running locally on default port 27017 or accessible via connection string)
 
-### 1. Clone and Install
+### 1. Clone and Install Dependencies
 ```bash
 git clone https://github.com/undefinedtrail/trail-studio.git
 cd trail-studio
 npm install
 ```
 
-### 2. Set Up Environment Variables
-Copy `.env.example` to create your `.env` file:
+### 2. Configure Environment Variables
+Copy `.env.example` to create `.env`:
 ```bash
 cp .env.example .env
 ```
-Default settings in `.env.example`:
+Default configuration values:
 ```env
 PORT=3000
 MONGO_URI=mongodb://127.0.0.1:27017/trail_studio
@@ -72,44 +73,47 @@ JWT_SECRET=trail-studio-super-secret-key-2025
 RATE_PER_SQFT=150
 ```
 
-### 3. Run Automated Tests
-You can run the full test suite with one command:
+### 3. Set Up Initial Accounts
+Initialize the administrator and customer accounts using the dedicated setup command:
+```bash
+npm run setup-accounts
+```
+This script creates the initial accounts with secure bcrypt-hashed passwords. It is fully idempotent, preserving existing accounts and passwords without resetting them on future server restarts.
+
+> **Security Notice**: Default accounts created for local evaluation are:
+> - **Customer**: `user@gmail.com` (password: `user123`, role: `customer`)
+> - **Administrator**: `admin@gmail.com` (password: `admin123`, role: `admin`)
+>
+> *These credentials are intended solely for local assignment testing and must be changed before any public or production deployment.*
+
+### 4. Run Automated Test Suite
+Run the comprehensive test suite with:
 ```bash
 npm test
 ```
-*The tests run on a separate test database (`trail_studio_test`) so your normal data stays untouched.*
+The test suite executes 55 automated checks covering authentication, password hashing, role permissions, concurrency, boundary validation, and customer privacy against an isolated test database (`trail_studio_test`).
 
-### 4. Start the Server
+### 5. Start the Application
+Start the server:
 ```bash
 npm start
 ```
-The server will connect to MongoDB, seed default accounts and the 12 folk paintings from `seed.json`, and run on `http://localhost:3000`.
-
-Open **`http://localhost:3000`** in your web browser.
+The application will connect to MongoDB, seed the folk art collection from `seed.json` if needed, and serve the application on:
+**`http://localhost:3000`**
 
 ---
 
-## Demo Accounts & Quick Testing
+## Testing User Flows
 
-For quick testing, you can use the pre-seeded demo accounts or create a new account from the registration form:
+1. **Sign in as Customer**:
+   - Log in using `user@gmail.com` (or create a new customer account using the registration form).
+   - Browse the folk art gallery and purchase an available painting.
+   - Fill out the wall mural form with your desired wall size and date to see real-time price calculation.
+   - Submit a custom pottery request selecting vessel shape and mineral glaze.
+   - Visit the **My Commissions** dashboard to view your collection and cancel an order or booking.
 
-| Role | Email | Password | What You Can Do |
-| :--- | :--- | :--- | :--- |
-| **Studio Admin** | `studio@artstudio.in` | `Studio@123` | View all customer orders, confirm/decline bookings, accept/decline pottery, add/edit paintings |
-| **Customer (Alice)** | `alice@example.com` | `Customer@123` | Buy paintings, book wall dates, request pottery, cancel own orders |
-| **Customer (Bob)** | `bob@example.com` | `Customer@123` | Second customer account to test privacy isolation and date conflicts |
-
-*Tip: The login page includes quick-fill buttons for Alice, Bob, and Studio Admin so you can fill demo credentials and log in with a single click.*
-
-### Testing Flow
-1. On the login screen, click **Alice (Customer)** to log in as Alice.
-2. Go to **Paintings** and click **Buy Artwork** on any piece.
-3. Go to **Wall Murals**, select a date 10 days away, enter `60` sq ft, and submit a booking.
-4. Go to **Custom Pottery**, pick a `Kulhad` with `Kumkum Red` glaze, set quantity to `4`, pick a date 20 days away, and submit.
-5. Click **Log Out** in the header, then click **Studio Admin** on the login screen to log in:
-   - The **Trail Studio Dashboard** opens immediately.
-   - Confirm Alice's mural booking and accept her pottery request.
-6. Click **Log Out**, then log in as **Bob (Customer)**:
-   - Check **My Requests & Orders** to verify Bob cannot see Alice's records (customer privacy).
-   - Try to buy the painting Alice bought to verify the sold-out refusal message.
-   - Try to book the date Alice booked to verify the date-taken refusal message.
+2. **Sign in as Administrator**:
+   - Log in using `admin@gmail.com`.
+   - Access the **Studio Dashboard** to view incoming customer orders across all three studio services.
+   - Confirm or decline pending wall mural commissions and pottery requests.
+   - Add a new painting to the catalog or edit pricing and details of available artworks.

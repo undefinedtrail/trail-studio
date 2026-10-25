@@ -1,33 +1,35 @@
-# System Design (DESIGN.md)
+# System Design & Architecture (DESIGN.md)
 
 ### 1. How do login and the two roles work?
-Users log in with their email and password. Passwords are encrypted safely using bcrypt hashing, and the server returns a signed JSON Web Token (JWT) that the browser sends in the `Authorization: Bearer <token>` header for protected requests. The server requires a configured `JWT_SECRET` environment variable and fails startup with a clear error if it is missing.
+Users sign in with their email and password. Passwords are never stored in plaintext; they are securely hashed using bcrypt (`salt rounds = 10`) before saving to the database. Upon successful login, the server issues a cryptographically signed JSON Web Token (JWT) that the browser sends in the `Authorization: Bearer <token>` header for subsequent requests. The server validates the `JWT_SECRET` environment variable at startup and terminates immediately with a clear error message if it is not configured.
 
-The app has two roles: `customer` and `studio` (admin). Customers can register, browse and buy paintings, book wall dates, request custom pottery, and manage their own orders. The studio can view all customer submissions, confirm or decline bookings, accept or decline pottery requests, and add or edit available paintings. 
+The application enforces two distinct roles:
+- **`customer`**: Can register, browse and buy available paintings, submit wall mural bookings, request custom pottery, and manage their own submissions.
+- **`admin` / `studio`**: Can view all orders and requests across the platform, confirm or decline mural bookings, accept or decline pottery requests, and add or edit available paintings in the catalog.
 
-Our auth middleware checks user identity and roles on every protected route:
-- If a user is not logged in, the server returns `401 Unauthorized`.
-- If a user tries an action meant for the other role, the server returns `403 Forbidden`.
-- If a customer tries to view or change another customer's record, the server returns `404 Not Found` for privacy so they cannot even tell the record exists.
+Our centralized authentication and authorization middleware enforces strict checks on all protected endpoints:
+- Missing or malformed authentication tokens return `401 Unauthorized`.
+- Actions attempted by an unauthorized role (such as a customer attempting to confirm a mural, or an admin attempting to purchase a painting) return `403 Forbidden`.
+- When a customer attempts to query or modify another customer's booking or pottery request, the server returns `404 Not Found` to preserve complete customer privacy and prevent resource enumeration.
 
 ---
 
 ### 2. Which database did you choose, and why?
 We chose **MongoDB with Mongoose**.
 
-MongoDB stores data in JSON-like documents, which fits our paintings, orders, bookings, and pottery requests cleanly without complex joins. It allows single-document atomic updates (`findOneAndUpdate`), which lets us check availability and mark a painting as sold in one single database operation. 
+MongoDB stores data as flexible, JSON-like documents, which naturally represents our paintings catalog, customer orders, mural bookings, and custom pottery requests without requiring complicated multi-table joins. Crucially, MongoDB supports atomic document operations (`findOneAndUpdate`), enabling us to check painting availability and mark it sold in a single database round-trip.
 
-MongoDB also supports partial unique indexes. This lets us guarantee that a booking date is unique only while a booking is active (`requested` or `confirmed`), while still keeping cancelled or declined bookings in history.
+MongoDB also supports **partial unique indexes**, which allows us to enforce that a calendar date is unique only among active bookings (`requested` or `confirmed`), while allowing cancelled or declined bookings to remain preserved in history.
 
-**Replica Set vs Standalone Transactions:**
-When connected to a MongoDB replica set (such as MongoDB Atlas or local replica sets), painting purchases and order cancellations run inside genuine multi-document ACID transactions (`startTransaction` / `commitTransaction`). If running on a standalone local MongoDB instance where replica sets are not configured, the system automatically detects this and falls back to atomic conditional operations with compensating rollback.
+**Replica Set vs. Standalone Transactions:**
+When deployed against a MongoDB replica set (such as MongoDB Atlas or local replica sets), painting purchases and order cancellations execute inside genuine multi-document ACID transactions (`startTransaction` / `commitTransaction`). When running on a standalone local MongoDB instance where replica sets are not enabled, our system automatically detects this environment and falls back to atomic conditional operations paired with compensating rollback logic.
 
 ---
 
 ### 3. How do you stop two people from taking the same painting or date?
 
 **For Paintings:**
-We use MongoDB's atomic `findOneAndUpdate`:
+We use MongoDB's atomic `findOneAndUpdate` with a condition on `isAvailable: true`:
 ```javascript
 const updatedPainting = await Painting.findOneAndUpdate(
   { _id: paintingId, isAvailable: true },
@@ -35,39 +37,43 @@ const updatedPainting = await Painting.findOneAndUpdate(
   { new: true, ...sessionOpts }
 );
 ```
-Because this happens in a single atomic step in the database, only the first request succeeds. Any concurrent request finds `isAvailable` is already false and gets an immediate response explaining that the painting was already sold. On replica sets, this runs inside a multi-document transaction alongside order creation. On standalone MongoDB, a compensating rollback restores availability if order creation fails.
+Because this condition and update occur atomically inside the database engine, only the first competing request can match and update the document. Any concurrent request arriving even milliseconds later finds `isAvailable` already `false`, receives `null`, and is immediately rejected with a clear message that the artwork was already sold. On replica sets, this operation is encapsulated in a multi-document ACID transaction alongside order creation.
 
 **For Wall Bookings:**
-We normalize booking dates to UTC midnight and use a partial unique index on active bookings:
+We normalize all booking dates to UTC midnight to avoid timezone drift and enforce a partial unique index on active bookings:
 ```javascript
 bookingSchema.index(
   { date: 1 },
   { unique: true, partialFilterExpression: { status: { $in: ['requested', 'confirmed'] } } }
 );
 ```
-If two customers try to book the exact same date at the same time, the database stops the second insert with a duplicate key error (`11000`). The server catches this error and returns a friendly `409 Conflict` message saying the date is already taken. If a booking is later cancelled or declined, the date is automatically released and can be booked again.
+If two customers submit requests for the same calendar date concurrently, MongoDB's unique index immediately rejects the second operation with a duplicate key error (`E11000`). Our server catches this error and returns a clean `409 Conflict` response explaining that the requested date is already reserved. If a customer cancels their booking, the status transitions to `cancelled`, which automatically releases the index and allows the date to be booked by another customer.
 
 ---
 
-### 4. What did you finish, what did you leave out, and what would you do next?
+### 4. What was finished, what was left out, and what would you do next?
 
 **What was finished:**
-- Full login and registration with bcrypt password hashing and JWT tokens.
-- All 3 services: original folk paintings from seed data, wall mural commissions with date and size validation, and custom pottery requests with item and glaze validation.
-- All status flows: orders (`placed`, `cancelled`), bookings (`requested`, `confirmed`, `declined`, `cancelled`), and pottery requests (`requested`, `accepted`, `declined`, `cancelled`).
-- Strict role permissions and customer privacy isolation (404 on other customers' data).
-- Clean frontend with explicit loading, empty, and refusal messages, plus quick-fill demo login buttons.
-- Automated API test suite covering all services, security checks, and concurrency against an isolated test database with strict safety protections.
+- Dedicated account setup script (`npm run setup-accounts`) initializing administrator and customer accounts with bcrypt password hashes.
+- Secure email/password login and customer registration with JWT Bearer token authentication and show/hide password visibility toggles.
+- Complete implementation of all 3 studio services from the seed dataset:
+  1. 12 one-of-a-kind Indian folk paintings with concurrency-safe purchasing and order cancellation.
+  2. Architectural wall mural bookings with live price calculation (₹150/sq ft), 7–90 day scheduling, and date conflict prevention.
+  3. Custom pottery commission requests with seed vessel and glaze options, 1–12 piece quantities, and 14-day curing schedules.
+- Complete lifecycle status flows for orders (`placed`, `cancelled`), bookings (`requested`, `confirmed`, `declined`, `cancelled`), and pottery (`requested`, `accepted`, `declined`, `cancelled`).
+- Strict server-side RBAC and customer privacy isolation (404 on unowned records).
+- Modular frontend architecture cleanly separated into `index.html`, `styles.css`, and `app.js` with an Indian artisan visual aesthetic.
+- 55 automated API and security tests with test database safety checks.
 
 **What was left out (out of scope):**
-Following Section 06 of the assignment brief, we intentionally left out:
-- Real payment gateway integration (buying creates an order record).
-- Password reset, email verification, social login, and studio sign-up.
-- Customer reviews, coupons, tracking, and transactional emails/SMS.
-- File upload pipelines, heavy animations, and mobile-specific design frameworks.
-- Cloud deployment, Docker containers, and CI/CD pipelines.
+In alignment with the assignment specification, we intentionally did not include:
+- Real payment gateway integration (purchasing creates an order record).
+- Password recovery emails, phone verification, and third-party OAuth.
+- Customer reviews, discount codes, shipping logistics, and SMS notifications.
+- Heavy frontend frameworks or CSS utility bloat.
+- Cloud container orchestration or CI/CD pipelines.
 
 **What would be done next:**
-- Real-time updates with WebSockets or Server-Sent Events so sold paintings and booked dates update instantly on everyone's screen.
-- Email alerts to notify customers when their booking or pottery request is confirmed or accepted.
-- Photo uploads for custom pottery sketches and reference dimensions.
+- Real-time inventory and booking updates using WebSockets or Server-Sent Events (SSE) so purchased paintings and booked dates update instantly across active user sessions.
+- Email notifications confirming order placement and status updates for commission decisions.
+- Image uploads for architectural wall photos and customer pottery sketches.
