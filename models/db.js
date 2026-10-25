@@ -217,11 +217,28 @@ function getMongoUri() {
   return process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/trail_studio';
 }
 
+let transactionsSupported = false;
+
+function supportsTransactions() {
+  return transactionsSupported;
+}
+
 async function connectDB(customUri) {
   const uri = customUri || getMongoUri();
   try {
     await mongoose.connect(uri);
     console.log(`[Database] Connected to MongoDB at ${uri}`);
+    try {
+      const hello = await mongoose.connection.db.admin().command({ hello: 1 });
+      transactionsSupported = Boolean(hello && (hello.setName || hello.msg === 'isdbgrid'));
+      if (transactionsSupported) {
+        console.log('[Database] Replica set detected: multi-document transactions enabled.');
+      } else {
+        console.log('[Database] Standalone MongoDB detected: atomic operations with compensating rollback enabled.');
+      }
+    } catch (e) {
+      transactionsSupported = false;
+    }
   } catch (err) {
     console.error('[Database] MongoDB connection error:', err.message);
     throw err;
@@ -318,4 +335,5 @@ module.exports = {
   getMongoUri,
   normalizeDate,
   seedDefaults,
+  supportsTransactions,
 };

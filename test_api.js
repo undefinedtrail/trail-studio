@@ -62,6 +62,21 @@ function assert(condition, message) {
 async function runTests() {
   console.log('--- Starting Trail Studio API & Security Test Suite ---');
   await connectDB();
+
+  // Strict Safety Check: Tests MUST run only against an isolated test database
+  const mongoose = require('mongoose');
+  const activeDbName = mongoose.connection.name;
+  if (!activeDbName || !activeDbName.toLowerCase().includes('test')) {
+    console.error(`\n❌ FATAL SAFETY CHECK: Refusing to run destructive cleanup on database "${activeDbName}"!`);
+    console.error('Tests are strictly restricted to databases containing "test" in their name (e.g. trail_studio_test).\n');
+    process.exit(1);
+  }
+
+  if (process.env.NODE_ENV !== 'test') {
+    console.error(`\n❌ FATAL SAFETY CHECK: NODE_ENV must be explicitly set to "test" (current: "${process.env.NODE_ENV}").\n`);
+    process.exit(1);
+  }
+
   await seedDefaults();
 
   // Reset test artifacts in the isolated test database
@@ -122,10 +137,9 @@ async function runTests() {
     res = await request('GET', '/api/auth/me', { Authorization: aliceToken });
     assert(res.status === 200 && res.body.user.email === 'alice@example.com', 'GET /api/auth/me returns authenticated user profile');
 
-    // Quick user switcher endpoint returns valid token
+    // Verify unauthenticated /api/auth/switch endpoint is removed (must return 404)
     res = await request('POST', '/api/auth/switch', {}, { email: 'studio@artstudio.in' });
-    assert(res.status === 200, 'POST /api/auth/switch returns 200 OK');
-    assert(res.body.token && (res.body.user.role === 'studio' || res.body.user.role === 'admin'), 'Switched user receives valid token and studio role');
+    assert(res.status === 404, 'Unauthenticated /api/auth/switch endpoint is removed (returns 404)');
 
     // ========================================================================
     // 2. Paintings Browsing, Creation, Editing & Purchase Concurrency
@@ -179,6 +193,18 @@ async function runTests() {
     res = await request('POST', `/api/paintings/${newlyAddedPainting._id}/buy`, { Authorization: bobToken });
     assert(res.status === 400, 'Second attempt to buy same painting is refused with 400');
     assert(res.body && res.body.error && res.body.error.toLowerCase().includes('sold'), 'Clear refusal message: painting already sold');
+
+    // Test concurrent purchases on another available painting:
+    const availablePaintings = await Painting.find({ isAvailable: true, _id: { $ne: newlyAddedPainting._id } });
+    if (availablePaintings.length > 0) {
+      const concurrentTarget = availablePaintings[0];
+      const [buy1, buy2] = await Promise.all([
+        request('POST', `/api/paintings/${concurrentTarget._id}/buy`, { Authorization: aliceToken }),
+        request('POST', `/api/paintings/${concurrentTarget._id}/buy`, { Authorization: bobToken })
+      ]);
+      const statuses = [buy1.status, buy2.status].sort();
+      assert(statuses[0] === 201 && statuses[1] === 400, 'Concurrent purchases resolve strictly: exactly one 201, one 400');
+    }
 
     // Studio cannot edit painting after it is sold -> 400
     res = await request('PATCH', `/api/paintings/${newlyAddedPainting._id}`, { Authorization: studioToken }, { price: 12000 });
@@ -252,6 +278,19 @@ async function runTests() {
     // Customer cannot duplicate-cancel already cancelled order -> 400
     res = await request('PATCH', `/api/orders/${orderId}/cancel`, { Authorization: aliceToken });
     assert(res.status === 400, 'Customer cannot cancel an already cancelled order (returns 400)');
+
+    // Test concurrent order cancellation: exactly one succeeds
+    const freshPainting = await Painting.findOne({ isAvailable: true });
+    if (freshPainting) {
+      const freshBuy = await request('POST', `/api/paintings/${freshPainting._id}/buy`, { Authorization: aliceToken });
+      const freshOrderId = freshBuy.body.order._id;
+      const [cancel1, cancel2] = await Promise.all([
+        request('PATCH', `/api/orders/${freshOrderId}/cancel`, { Authorization: aliceToken }),
+        request('PATCH', `/api/orders/${freshOrderId}/cancel`, { Authorization: aliceToken })
+      ]);
+      const cancelStatuses = [cancel1.status, cancel2.status].sort();
+      assert(cancelStatuses[0] === 200 && cancelStatuses[1] === 400, 'Concurrent order cancellations resolve strictly: one 200, one 400');
+    }
 
     // Customer cancels booking -> Date released
     res = await request('PATCH', `/api/bookings/${aliceBookingId}/cancel`, { Authorization: aliceToken });
