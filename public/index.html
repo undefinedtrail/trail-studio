@@ -21,7 +21,7 @@
 
       <!-- Three Core Navigation Tabs + Customer Activity & Studio Admin -->
       <nav class="nav-tabs-group" aria-label="Main Navigation">
-        <button type="button" class="nav-tab-btn active" data-tab="paintings" onclick="switchMainTab('paintings')">Paintings</button>
+        <button type="button" class="nav-tab-btn" data-tab="paintings" onclick="switchMainTab('paintings')">Paintings</button>
         <button type="button" class="nav-tab-btn" data-tab="murals" onclick="switchMainTab('murals')">Wall Murals</button>
         <button type="button" class="nav-tab-btn" data-tab="pottery" onclick="switchMainTab('pottery')">Pottery</button>
         <button type="button" class="nav-tab-btn" data-tab="activity" id="navBtnActivity" onclick="switchMainTab('activity')">My Activity</button>
@@ -32,7 +32,7 @@
       <div class="nav-auth-area">
         <!-- Guest State -->
         <div id="navAuthGuest">
-          <button type="button" class="btn btn-primary btn-sm" onclick="switchMainTab('auth')">Sign In</button>
+          <button type="button" id="navBtnSignIn" class="btn btn-primary btn-sm" onclick="switchMainTab('auth')">Sign In</button>
         </div>
 
         <!-- Logged In State -->
@@ -51,7 +51,7 @@
     <!-- ====================================================================
          TAB 1: PAINTINGS
          ==================================================================== -->
-    <section id="tab-paintings" class="tab-panel active">
+    <section id="tab-paintings" class="tab-panel">
       <!-- Atelier Header Banner -->
       <div class="tab-banner">
         <div class="tab-title-wrap">
@@ -569,7 +569,7 @@
     <!-- ====================================================================
          TAB 6: AUTHENTICATION (Sign In & Customer Registration)
          ==================================================================== -->
-    <section id="tab-auth" class="tab-panel">
+    <section id="tab-auth" class="tab-panel active">
       <div style="max-width: 440px; margin: 0 auto;">
         <div class="activity-box">
           <div class="subtab-header">
@@ -748,30 +748,6 @@
 
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
-
-  <!-- Minimalist Studio Footer -->
-  <footer class="studio-footer">
-    <div class="container">
-      <div class="footer-top">
-        <div class="footer-brand">
-          <h4>Trail Studio</h4>
-          <p>Preserving Indian folk arts, architectural murals, and handmade ceramics. Every piece carries centuries of living Indian cultural heritage.</p>
-        </div>
-        <div class="footer-col">
-          <h5>Studio Ateliers</h5>
-          <p>Jaipur Craft Quarter<br>Hyderabad Cultural District<br>India</p>
-        </div>
-        <div class="footer-col">
-          <h5>Visiting Hours</h5>
-          <p>Monday &ndash; Saturday<br>10:00 AM &ndash; 7:00 PM IST<br>Sunday by appointment</p>
-        </div>
-      </div>
-      <div class="footer-bottom">
-        <div>&copy; Trail Studio. All rights reserved.</div>
-        <div>Handcrafted Indian Heritage Art · Express + MongoDB Full Stack</div>
-      </div>
-    </div>
-  </footer>
 
   <!-- Application Script -->
   <script src="app.js"></script>

@@ -1175,63 +1175,6 @@ textarea.form-control {
   margin: 0 auto;
 }
 
-/* Footer */
-.studio-footer {
-  background-color: #ffffff;
-  border-top: 1px solid var(--border);
-  padding: 34px 0 24px;
-  margin-top: 50px;
-}
-
-.footer-top {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 28px;
-  margin-bottom: 24px;
-}
-
-.footer-brand h4 {
-  font-family: var(--font-serif);
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 4px;
-}
-
-.footer-brand p {
-  font-size: 0.85rem;
-  color: var(--text-muted);
-  line-height: 1.5;
-  max-width: 420px;
-}
-
-.footer-col h5 {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 10px;
-}
-
-.footer-col p {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  line-height: 1.6;
-}
-
-.footer-bottom {
-  border-top: 1px solid var(--border-light);
-  padding-top: 18px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  font-size: 0.78rem;
-  color: var(--text-light);
-}
-
 /* Responsive Media Queries */
 @media (max-width: 900px) {
   .studio-split-grid {
@@ -1239,9 +1182,6 @@ textarea.form-control {
   }
   .glaze-selection-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-  .footer-top {
-    grid-template-columns: 1fr;
   }
 }
 

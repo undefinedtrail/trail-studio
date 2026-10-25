@@ -5,10 +5,11 @@
 
 // ============================================================================
 // 1. Application State
+// Open on Sign In page at first; do not auto-login directly
 // ============================================================================
 const AppState = {
-  activeTab: 'paintings', // 'paintings' | 'murals' | 'pottery' | 'activity' | 'admin' | 'auth'
-  token: localStorage.getItem('trail_studio_token') || null,
+  activeTab: 'auth', // Default to Sign In tab
+  token: null,
   currentUser: null,
   config: {
     studioName: 'Trail Studio',
@@ -45,14 +46,12 @@ const AppState = {
   adminPottery: [],
 };
 
-// Safe session restoration
+// Reset any stale session on launch so user starts at Sign In page
 try {
-  const storedUser = localStorage.getItem('trail_studio_user');
-  if (storedUser) {
-    AppState.currentUser = JSON.parse(storedUser);
-  }
-} catch (e) {
+  localStorage.removeItem('trail_studio_token');
   localStorage.removeItem('trail_studio_user');
+} catch (e) {
+  // Ignore storage exceptions
 }
 
 // ============================================================================
@@ -83,6 +82,11 @@ function switchMainTab(tabName) {
   document.querySelectorAll('.nav-tab-btn').forEach((btn) => {
     btn.classList.toggle('active', btn.dataset.tab === tabName);
   });
+
+  const navBtnSignIn = document.getElementById('navBtnSignIn');
+  if (navBtnSignIn) {
+    navBtnSignIn.classList.toggle('active', tabName === 'auth');
+  }
 
   // 2. Hide all tab panels, show only target tab panel
   document.querySelectorAll('.tab-panel').forEach((panel) => {
@@ -1380,18 +1384,19 @@ async function handleRegisterSubmit(e) {
 
 // ============================================================================
 // 12. App Initialization
+// Open on Sign In page at first; do not auto-login directly
 // ============================================================================
 async function initApp() {
-  await verifyAuthSession();
+  updateNavigationUI();
   await loadInitialData();
 
-  // Route to initial hash or default to 'paintings'
+  // Route to initial hash if explicitly specified in URL, otherwise open Sign In page
   const initialHash = location.hash.replace('#', '').trim();
   const validTabs = ['paintings', 'murals', 'pottery', 'activity', 'admin', 'auth'];
-  if (validTabs.includes(initialHash)) {
+  if (initialHash && validTabs.includes(initialHash)) {
     switchMainTab(initialHash);
   } else {
-    switchMainTab('paintings');
+    switchMainTab('auth');
   }
 
   // Attach Form Event Listeners
