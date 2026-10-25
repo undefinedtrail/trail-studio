@@ -487,6 +487,49 @@
       flex-wrap: wrap;
     }
 
+    /* Auth Box */
+    .auth-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 24px;
+      max-width: 440px;
+      margin: 32px auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .auth-tabs {
+      display: flex;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .auth-tab-btn {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 8px 12px;
+      font-size: 0.95rem;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .auth-tab-btn.active {
+      color: var(--accent);
+      border-bottom: 2px solid var(--accent);
+      font-weight: 600;
+    }
+
+    .demo-box {
+      background: var(--tag-bg);
+      border: 1px dashed var(--border);
+      border-radius: 4px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      font-size: 0.82rem;
+    }
+
     /* Footer */
     footer {
       margin-top: 48px;
@@ -513,18 +556,15 @@
         </div>
       </div>
 
-      <!-- Active User & Role Switcher Bar -->
-      <div class="session-bar" id="sessionBar">
+      <!-- Logged-in Session Bar -->
+      <div class="session-bar" id="sessionBar" style="display:none;">
         <div class="session-info">
-          <span>Active User:</span>
-          <strong id="sessionEmail">alice@example.com</strong>
-          <span class="role-badge customer" id="sessionRole">customer</span>
+          <span>Logged in as:</span>
+          <strong id="sessionEmail"></strong>
+          <span class="role-badge" id="sessionRole"></span>
         </div>
-        <div class="demo-btn-group" style="align-items:center; margin-top:0;">
-          <span style="font-size:0.82rem; color:var(--text-muted); margin-right:4px;">Switch User:</span>
-          <button type="button" class="btn btn-sm btn-primary" id="btnUserAlice" onclick="switchUser('alice@example.com')">Alice (Customer)</button>
-          <button type="button" class="btn btn-sm" id="btnUserBob" onclick="switchUser('bob@example.com')">Bob (Customer)</button>
-          <button type="button" class="btn btn-sm" id="btnUserStudio" onclick="switchUser('studio@artstudio.in')">Trail Studio Admin</button>
+        <div>
+          <button class="btn btn-sm btn-danger" onclick="handleLogout()">Log Out</button>
         </div>
       </div>
     </header>
@@ -532,8 +572,55 @@
     <!-- Global Notification Banner -->
     <div id="globalNotification"></div>
 
+    <!-- Auth View (Shown when not logged in) -->
+    <section id="viewAuth" class="auth-card" style="display:none;">
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tabLoginBtn" onclick="toggleAuthMode('login')">Sign In</button>
+        <button class="auth-tab-btn" id="tabRegisterBtn" onclick="toggleAuthMode('register')">Create Customer Account</button>
+      </div>
+
+      <div class="demo-box" id="demoAccountsBox">
+        <div style="font-weight:600; margin-bottom:4px;">Demo Accounts (Pre-seeded):</div>
+        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px;">Click to fill credentials and log in:</div>
+        <div class="demo-btn-group">
+          <button type="button" class="btn btn-sm" onclick="quickFillLogin('alice@example.com', 'Customer@123')">Alice (Customer)</button>
+          <button type="button" class="btn btn-sm" onclick="quickFillLogin('bob@example.com', 'Customer@123')">Bob (Customer)</button>
+          <button type="button" class="btn btn-sm" onclick="quickFillLogin('studio@artstudio.in', 'Studio@123')">Studio Admin</button>
+        </div>
+      </div>
+
+      <div id="authMessage"></div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+        <div class="form-group">
+          <label for="loginEmail">Email Address</label>
+          <input type="email" id="loginEmail" placeholder="e.g. alice@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btnLoginSubmit" style="width:100%;">Sign In</button>
+      </form>
+
+      <!-- Registration Form -->
+      <form id="registerForm" style="display:none;" onsubmit="handleRegisterSubmit(event)">
+        <div class="form-group">
+          <label for="regEmail">Email Address</label>
+          <input type="email" id="regEmail" placeholder="e.g. new.customer@example.com" required>
+        </div>
+        <div class="form-group">
+          <label for="regPassword">Password (Minimum 6 characters)</label>
+          <input type="password" id="regPassword" minlength="6" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btnRegisterSubmit" style="width:100%;">Create Account</button>
+        <div class="help-text" style="margin-top:6px;">New registrations are created with customer permissions.</div>
+      </form>
+    </section>
+
     <!-- App Content -->
-    <div id="appContent">
+    <div id="appContent" style="display:none;">
       <!-- Navigation Tabs -->
       <nav class="nav-tabs">
         <button class="tab-btn active" id="tabPaintingsBtn" onclick="showTab('paintings')">Browse Paintings</button>
@@ -932,115 +1019,36 @@
       setupDateRangeConstraints();
       setupPotteryOptions();
 
-      // Check existing session or default to Alice
+      // Check existing session
       if (authToken && currentUser) {
         try {
           const res = await fetch('/api/auth/me', { headers: getAuthHeaders() });
           if (res.ok) {
             const data = await res.json();
             currentUser = data.user;
-            updateSessionUI();
+            showAuthenticatedUI();
             return;
           }
-        } catch (e) {
-          // Fall through to switchUser
-        }
+        } catch (e) {}
       }
-      await switchUser('alice@example.com');
+      showAuthView();
     });
 
-    async function fetchConfig() {
-      try {
-        const res = await fetch('/api/config');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.ratePerSqFt) ratePerSqFt = data.ratePerSqFt;
-          if (data.currency === 'INR') currencySymbol = '₹';
-          if (Array.isArray(data.potteryItems)) potteryItems = data.potteryItems;
-          if (Array.isArray(data.glazes)) glazes = data.glazes;
-          updatePriceEstimate();
-        }
-      } catch (e) {
-        console.warn('Could not fetch studio config');
-      }
+    function showAuthView() {
+      document.getElementById('viewAuth').style.display = 'block';
+      document.getElementById('sessionBar').style.display = 'none';
+      document.getElementById('appContent').style.display = 'none';
     }
 
-    function setupPotteryOptions() {
-      const itemSelect = document.getElementById('potteryItemSelect');
-      const glazeSelect = document.getElementById('potteryGlazeSelect');
-      const editItemSelect = document.getElementById('editPotteryItem');
-      const editGlazeSelect = document.getElementById('editPotteryGlaze');
-
-      const itemOptions = potteryItems.map(i => `<option value="${i.id}">${escapeHtml(i.name)} (${i.id})</option>`).join('');
-      const glazeOptions = glazes.map(g => `<option value="${g.id}">${escapeHtml(g.name)} (${g.id})</option>`).join('');
-
-      if (itemSelect) itemSelect.innerHTML = itemOptions;
-      if (glazeSelect) glazeSelect.innerHTML = glazeOptions;
-      if (editItemSelect) editItemSelect.innerHTML = itemOptions;
-      if (editGlazeSelect) editGlazeSelect.innerHTML = glazeOptions;
-
-      // Minimum 14-day lead time for pottery
-      const potteryDateInput = document.getElementById('potteryNeededBy');
-      const editPotteryDateInput = document.getElementById('editPotteryNeededBy');
-      const minDate = new Date();
-      minDate.setDate(minDate.getDate() + 14);
-      const minStr = minDate.toISOString().split('T')[0];
-
-      if (potteryDateInput) potteryDateInput.min = minStr;
-      if (editPotteryDateInput) editPotteryDateInput.min = minStr;
-    }
-
-    function getAuthHeaders() {
-      const headers = { 'Content-Type': 'application/json' };
-      if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-      }
-      return headers;
-    }
-
-    // ========================================================================
-    // Quick User / Role Switcher
-    // ========================================================================
-    async function switchUser(email) {
-      try {
-        const res = await fetch('/api/auth/switch', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
-
-        const data = await res.json();
-        if (res.ok && data.token) {
-          authToken = data.token;
-          currentUser = data.user;
-          localStorage.setItem('trail_studio_token', authToken);
-          localStorage.setItem('trail_studio_user', JSON.stringify(currentUser));
-          updateSessionUI();
-          showNotification(`Switched active user to ${currentUser.email} (${currentUser.role})`, 'success');
-        } else {
-          showNotification(data.error || 'Failed to switch user.', 'error');
-        }
-      } catch (err) {
-        showNotification('Network error switching user: ' + err.message, 'error');
-      }
-    }
-
-    function updateSessionUI() {
-      if (!currentUser) return;
+    function showAuthenticatedUI() {
+      document.getElementById('viewAuth').style.display = 'none';
+      document.getElementById('sessionBar').style.display = 'flex';
+      document.getElementById('appContent').style.display = 'block';
 
       document.getElementById('sessionEmail').textContent = currentUser.email;
       const roleBadge = document.getElementById('sessionRole');
       roleBadge.textContent = currentUser.role;
       roleBadge.className = 'role-badge ' + currentUser.role;
-
-      // Update switcher button highlights
-      const btnAlice = document.getElementById('btnUserAlice');
-      const btnBob = document.getElementById('btnUserBob');
-      const btnStudio = document.getElementById('btnUserStudio');
-
-      if (btnAlice) btnAlice.className = 'btn btn-sm ' + (currentUser.email === 'alice@example.com' ? 'btn-primary' : '');
-      if (btnBob) btnBob.className = 'btn btn-sm ' + (currentUser.email === 'bob@example.com' ? 'btn-primary' : '');
-      if (btnStudio) btnStudio.className = 'btn btn-sm ' + (currentUser.email === 'studio@artstudio.in' ? 'btn-primary' : '');
 
       const tabAdminBtn = document.getElementById('tabAdminBtn');
       const tabWallBtn = document.getElementById('tabWallBtn');
@@ -1062,6 +1070,120 @@
         tabMyRecordsBtn.style.display = 'inline-block';
         showTab('paintings');
       }
+    }
+
+    function toggleAuthMode(mode) {
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      const tabLoginBtn = document.getElementById('tabLoginBtn');
+      const tabRegisterBtn = document.getElementById('tabRegisterBtn');
+      const demoBox = document.getElementById('demoAccountsBox');
+      document.getElementById('authMessage').innerHTML = '';
+
+      if (mode === 'login') {
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        if (demoBox) demoBox.style.display = 'block';
+        tabLoginBtn.classList.add('active');
+        tabRegisterBtn.classList.remove('active');
+      } else {
+        loginForm.style.display = 'none';
+        registerForm.style.display = 'block';
+        if (demoBox) demoBox.style.display = 'none';
+        tabLoginBtn.classList.remove('active');
+        tabRegisterBtn.classList.add('active');
+      }
+    }
+
+    function quickFillLogin(email, password) {
+      toggleAuthMode('login');
+      document.getElementById('loginEmail').value = email;
+      document.getElementById('loginPassword').value = password;
+      const form = document.getElementById('loginForm');
+      form.dispatchEvent(new Event('submit', { cancelable: true }));
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnLoginSubmit');
+      const msgBox = document.getElementById('authMessage');
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      msgBox.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data.token) {
+          authToken = data.token;
+          currentUser = data.user;
+          localStorage.setItem('trail_studio_token', authToken);
+          localStorage.setItem('trail_studio_user', JSON.stringify(currentUser));
+          showAuthenticatedUI();
+          showNotification(`Logged in as ${currentUser.email} (${currentUser.role})`, 'success');
+        } else {
+          msgBox.innerHTML = `<div class="status-box error">${data.error || 'Login failed.'}</div>`;
+        }
+      } catch (err) {
+        msgBox.innerHTML = `<div class="status-box error">Network error: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    }
+
+    async function handleRegisterSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnRegisterSubmit');
+      const msgBox = document.getElementById('authMessage');
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+      msgBox.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+        if (res.ok && data.token) {
+          authToken = data.token;
+          currentUser = data.user;
+          localStorage.setItem('trail_studio_token', authToken);
+          localStorage.setItem('trail_studio_user', JSON.stringify(currentUser));
+          showAuthenticatedUI();
+          showNotification(`Account created! Logged in as ${currentUser.email}`, 'success');
+        } else {
+          msgBox.innerHTML = `<div class="status-box error">${data.error || 'Registration failed.'}</div>`;
+        }
+      } catch (err) {
+        msgBox.innerHTML = `<div class="status-box error">Network error: ${err.message}</div>`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    }
+
+    function handleLogout() {
+      authToken = null;
+      currentUser = null;
+      localStorage.removeItem('trail_studio_token');
+      localStorage.removeItem('trail_studio_user');
+      showAuthView();
+      showNotification('You have been logged out.', 'info');
     }
 
     // ========================================================================
@@ -1126,7 +1248,7 @@
         });
 
         if (res.status === 401) {
-          switchUser('alice@example.com');
+          handleLogout();
           return;
         }
 

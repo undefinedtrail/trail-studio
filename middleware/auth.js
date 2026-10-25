@@ -1,7 +1,10 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models/db');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'trail-studio-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is missing. Please set JWT_SECRET in your .env file.');
+}
 
 // ============================================================================
 // 1. Generate Signed JWT Token

@@ -13,6 +13,7 @@ const {
   connectDB,
   normalizeDate,
   seedDefaults,
+  supportsTransactions,
 } = require('./models/db');
 
 const {
@@ -161,36 +162,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Quick Role / User Switcher (For evaluation across demo accounts)
-app.post('/api/auth/switch', async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required.' });
-    }
-
-    const cleanEmail = String(email).trim().toLowerCase();
-    const user = await User.findOne({ email: cleanEmail });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User account not found.' });
-    }
-
-    const token = generateToken(user);
-    res.json({
-      message: 'Switched user successfully.',
-      token,
-      user: {
-        id: user._id,
-        email: user.email,
-        role: user.role,
-      },
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Switch failed: ' + err.message });
-  }
-});
-
 // Current Authenticated User Info
 app.get('/api/auth/me', authenticate, (req, res) => {
   res.json({
@@ -301,23 +272,38 @@ app.patch('/api/paintings/:id', authenticate, requireRole('admin', 'studio'), as
 });
 
 // POST /api/paintings/:id/buy (Buy painting - Customer only)
-// Concurrency rule: Paintings are one of a kind. Atomic findOneAndUpdate prevents race conditions.
+// Concurrency rule: Paintings are one of a kind. Uses multi-document transaction when available.
 app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async (req, res) => {
-  try {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'Invalid painting ID format.' });
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid painting ID format.' });
+  }
+
+  const useTransaction = supportsTransactions();
+  let session = null;
+
+  if (useTransaction) {
+    try {
+      session = await mongoose.startSession();
+      session.startTransaction();
+    } catch (sessErr) {
+      session = null;
     }
+  }
 
-    // Atomic condition ensures only ONE concurrent request can transition availability from true to false
+  try {
+    const sessionOpts = useTransaction ? { session } : {};
+
+    // Atomic update within transaction guarantees exclusivity
     const updatedPainting = await Painting.findOneAndUpdate(
       { _id: id, isAvailable: true },
       { $set: { isAvailable: false } },
-      { new: true }
+      { new: true, ...sessionOpts }
     );
 
     if (!updatedPainting) {
+      if (useTransaction) await session.abortTransaction();
       const existingPainting = await Painting.findById(id);
       if (!existingPainting) {
         return res.status(404).json({ error: 'Painting not found.' });
@@ -327,18 +313,18 @@ app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async 
       });
     }
 
-    // Create the order for the customer
-    let order;
-    try {
-      order = await Order.create({
+    // Create the order for the customer within the same transaction
+    const [order] = await Order.create(
+      [{
         paintingId: updatedPainting._id,
         customerId: req.user._id,
         status: 'placed',
-      });
-    } catch (orderErr) {
-      // Compensating action: roll back painting availability if order creation fails
-      await Painting.findByIdAndUpdate(id, { isAvailable: true });
-      throw orderErr;
+      }],
+      sessionOpts
+    );
+
+    if (useTransaction) {
+      await session.commitTransaction();
     }
 
     res.status(201).json({
@@ -347,7 +333,17 @@ app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async 
       painting: updatedPainting,
     });
   } catch (err) {
+    if (useTransaction && session) {
+      try { await session.abortTransaction(); } catch (e) {}
+    } else {
+      // Compensating action for standalone MongoDB without replica set
+      try { await Painting.findByIdAndUpdate(id, { isAvailable: true }); } catch (e) {}
+    }
     res.status(500).json({ error: 'Failed to complete purchase: ' + err.message });
+  } finally {
+    if (session) {
+      await session.endSession();
+    }
   }
 });
 
@@ -374,49 +370,83 @@ app.get('/api/orders', authenticate, async (req, res) => {
 
 // PATCH /api/orders/:id/cancel (Customer only - cancels order and restores painting availability)
 app.patch('/api/orders/:id/cancel', authenticate, requireRole('customer'), async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ error: 'Invalid order ID.' });
-    }
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid order ID.' });
+  }
 
-    const order = await Order.findById(id);
+  const useTransaction = supportsTransactions();
+  let session = null;
+
+  if (useTransaction) {
+    try {
+      session = await mongoose.startSession();
+      session.startTransaction();
+    } catch (sessErr) {
+      session = null;
+    }
+  }
+
+  try {
+    const sessionOpts = useTransaction ? { session } : {};
+
+    const order = await Order.findById(id).session(session || undefined);
     if (!order) {
+      if (useTransaction) await session.abortTransaction();
       return res.status(404).json({ error: 'Order not found.' });
     }
 
     // Customer privacy: viewing/cancelling another customer's order returns 404
     if (!enforceOwnership(order.customerId, req.user)) {
+      if (useTransaction) await session.abortTransaction();
       return res.status(404).json({ error: 'Order not found.' });
     }
 
     if (order.status === 'cancelled') {
+      if (useTransaction) await session.abortTransaction();
       return res.status(400).json({ error: 'Order is already cancelled.' });
     }
     if (order.status !== 'placed') {
+      if (useTransaction) await session.abortTransaction();
       return res.status(400).json({ error: 'Only placed orders can be cancelled.' });
     }
 
-    // Atomic update prevents duplicate cancellations
+    // Atomic update within transaction prevents race conditions
     const cancelledOrder = await Order.findOneAndUpdate(
       { _id: id, status: 'placed', customerId: req.user._id },
       { $set: { status: 'cancelled' } },
-      { new: true }
+      { new: true, ...sessionOpts }
     );
 
     if (!cancelledOrder) {
+      if (useTransaction) await session.abortTransaction();
       return res.status(400).json({ error: 'Order is already cancelled or cannot be modified.' });
     }
 
-    // Return the painting to the available catalog
-    await Painting.findByIdAndUpdate(cancelledOrder.paintingId, { isAvailable: true });
+    // Return the painting to the available catalog within the same transaction
+    await Painting.findByIdAndUpdate(
+      cancelledOrder.paintingId,
+      { $set: { isAvailable: true } },
+      sessionOpts
+    );
+
+    if (useTransaction) {
+      await session.commitTransaction();
+    }
 
     res.json({
       message: 'Order cancelled successfully. The artwork is now available again in Trail Studio.',
       order: cancelledOrder,
     });
   } catch (err) {
+    if (useTransaction && session) {
+      try { await session.abortTransaction(); } catch (e) {}
+    }
     res.status(500).json({ error: 'Failed to cancel order: ' + err.message });
+  } finally {
+    if (session) {
+      await session.endSession();
+    }
   }
 });
 
