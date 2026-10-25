@@ -1,7 +1,7 @@
 # System Design (DESIGN.md)
 
 ### 1. How do login and the two roles work?
-Users log in with their email and password. Passwords are encrypted safely using bcrypt hashing, and the server returns a signed JSON Web Token (JWT) that the browser sends in the `Authorization` header for protected requests. 
+Users can log in with their email and password or use the 1-click role switcher in the header to switch between test accounts. Passwords are encrypted safely using bcrypt hashing, and the server returns a signed JSON Web Token (JWT) that the browser sends in the `Authorization` header for protected requests. 
 
 The app has two roles: `customer` and `studio` (admin). Customers can register, browse and buy paintings, book wall dates, request custom pottery, and manage their own orders. The studio can view all customer submissions, confirm or decline bookings, accept or decline pottery requests, and add or edit available paintings. 
 

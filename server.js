@@ -161,6 +161,36 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Quick Role / User Switcher (For evaluation across demo accounts)
+app.post('/api/auth/switch', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required.' });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const user = await User.findOne({ email: cleanEmail });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User account not found.' });
+    }
+
+    const token = generateToken(user);
+    res.json({
+      message: 'Switched user successfully.',
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Switch failed: ' + err.message });
+  }
+});
+
 // Current Authenticated User Info
 app.get('/api/auth/me', authenticate, (req, res) => {
   res.json({

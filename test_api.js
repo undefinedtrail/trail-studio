@@ -122,6 +122,11 @@ async function runTests() {
     res = await request('GET', '/api/auth/me', { Authorization: aliceToken });
     assert(res.status === 200 && res.body.user.email === 'alice@example.com', 'GET /api/auth/me returns authenticated user profile');
 
+    // Quick user switcher endpoint returns valid token
+    res = await request('POST', '/api/auth/switch', {}, { email: 'studio@artstudio.in' });
+    assert(res.status === 200, 'POST /api/auth/switch returns 200 OK');
+    assert(res.body.token && (res.body.user.role === 'studio' || res.body.user.role === 'admin'), 'Switched user receives valid token and studio role');
+
     // ========================================================================
     // 2. Paintings Browsing, Creation, Editing & Purchase Concurrency
     // ========================================================================
