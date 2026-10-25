@@ -1,44 +1,57 @@
-const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const { User } = require('../models/db');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'trail-studio-secret-key-change-in-production';
+
 // ============================================================================
-// Authentication Middleware
+// 1. Generate Signed JWT Token
 // ============================================================================
-// Verifies user identity via header (x-user-email, x-user-id, or Authorization).
-// Returns 401 Unauthorized if missing or invalid.
+function generateToken(user) {
+  return jwt.sign(
+    {
+      id: user._id,
+      role: user.role,
+    },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+}
+
+// ============================================================================
+// 2. Authentication Middleware
+// ============================================================================
+// Verifies Bearer JWT token from Authorization header.
+// Rejects unauthenticated or invalid requests with 401 Unauthorized.
 async function authenticate(req, res, next) {
   try {
-    const emailHeader = req.headers['x-user-email'];
-    const userIdHeader = req.headers['x-user-id'];
     const authHeader = req.headers['authorization'];
 
-    let identifier = emailHeader || userIdHeader;
-
-    if (!identifier && authHeader) {
-      if (authHeader.startsWith('Bearer ')) {
-        identifier = authHeader.slice(7).trim();
-      } else {
-        identifier = authHeader.trim();
-      }
-    }
-
-    if (!identifier) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
-        error: 'Unauthorized: Authentication required. Provide x-user-email or Authorization header.',
+        error: 'Authentication required. Please log in to proceed.',
       });
     }
 
-    let user = null;
-    if (mongoose.Types.ObjectId.isValid(identifier)) {
-      user = await User.findById(identifier);
-    }
-    if (!user) {
-      user = await User.findOne({ email: identifier.toLowerCase().trim() });
+    const token = authHeader.slice(7).trim();
+    if (!token) {
+      return res.status(401).json({
+        error: 'Authentication token missing.',
+      });
     }
 
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (jwtErr) {
+      return res.status(401).json({
+        error: 'Invalid or expired session. Please log in again.',
+      });
+    }
+
+    const user = await User.findById(decoded.id).select('-password');
     if (!user) {
       return res.status(401).json({
-        error: 'Unauthorized: User does not exist.',
+        error: 'User account no longer exists.',
       });
     }
 
@@ -51,18 +64,17 @@ async function authenticate(req, res, next) {
 }
 
 // ============================================================================
-// Role-Based Access Control (RBAC) Middleware
+// 3. Role-Based Access Control (RBAC) Middleware
 // ============================================================================
-// Restricts endpoint access to specific roles. Returns 403 Forbidden on mismatch.
-// Note: 'admin' and 'studio' are treated as synonymous for studio management.
+// Checks whether authenticated user has the required role.
+// Note: 'studio' and 'admin' are treated as synonymous for studio management.
 function requireRole(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized: Please log in first.' });
+      return res.status(401).json({ error: 'Authentication required. Please log in.' });
     }
 
     let roles = Array.isArray(allowedRoles[0]) ? allowedRoles[0] : allowedRoles;
-    // Normalize admin and studio synonymity
     if (roles.includes('admin') && !roles.includes('studio')) {
       roles.push('studio');
     }
@@ -72,7 +84,7 @@ function requireRole(...allowedRoles) {
 
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
-        error: `Forbidden: Action not allowed for role '${req.user.role}'. Required: ${roles.join(' or ')}.`,
+        error: `Access denied. This action is restricted to ${roles.join(' or ')} users.`,
       });
     }
 
@@ -81,13 +93,13 @@ function requireRole(...allowedRoles) {
 }
 
 // ============================================================================
-// Ownership Check Helper for Customers
+// 4. Ownership Verification Helper for Customer Records
 // ============================================================================
-// Specification Rule: If a customer tries to query, view, or modify another customer's
-// record/booking, return 404 Not Found (not 403) to prevent customer enumeration.
+// Assignment Rule: If a customer attempts to query, view, or modify another customer's
+// record, the server strictly returns 404 Not Found (not 403) to prevent customer enumeration.
 function enforceOwnership(documentCustomerId, currentUser) {
   if (currentUser.role === 'admin' || currentUser.role === 'studio') {
-    return true; // Studio has view access across all records
+    return true; // Studio has view access across all studio records
   }
 
   const docIdStr = documentCustomerId ? documentCustomerId.toString() : '';
@@ -97,6 +109,7 @@ function enforceOwnership(documentCustomerId, currentUser) {
 }
 
 module.exports = {
+  generateToken,
   authenticate,
   requireRole,
   enforceOwnership,
