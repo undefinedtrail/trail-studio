@@ -272,8 +272,6 @@ app.patch('/api/paintings/:id', authenticate, requireRole('admin', 'studio'), as
   }
 });
 
-// POST /api/paintings/:id/buy (Buy painting - Customer only)
-// Concurrency rule: Paintings are one of a kind. Uses multi-document transaction when available.
 app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async (req, res) => {
   const { id } = req.params;
 
@@ -295,8 +293,6 @@ app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async 
 
   try {
     const sessionOpts = useTransaction ? { session } : {};
-
-    // Atomic update within transaction guarantees exclusivity
     const updatedPainting = await Painting.findOneAndUpdate(
       { _id: id, isAvailable: true },
       { $set: { isAvailable: false } },
@@ -313,8 +309,6 @@ app.post('/api/paintings/:id/buy', authenticate, requireRole('customer'), async 
         error: 'This painting has already been sold and is no longer available.',
       });
     }
-
-    // Create the order for the customer within the same transaction
     const [order] = await Order.create(
       [{
         paintingId: updatedPainting._id,
@@ -456,7 +450,7 @@ app.patch('/api/orders/:id/cancel', authenticate, requireRole('customer'), async
 // ============================================================================
 
 // POST /api/bookings (Book a wall date 7-90 days away, size 10-500 sq ft)
-app.post('/api/bookings', authenticate, requireRole('customer'), async (req, res) => {
+app.post('/api/bookings', authenticate, requireRole('customer', 'admin', 'studio'), async (req, res) => {
   try {
     const { date, size, address } = req.body;
 
@@ -545,6 +539,17 @@ app.get('/api/bookings', authenticate, async (req, res) => {
     res.json(bookings);
   } catch (err) {
     res.status(500).json({ error: 'Failed to retrieve bookings: ' + err.message });
+  }
+});
+
+// GET /api/bookings/reserved (List active reserved dates so users can pick an available date)
+app.get('/api/bookings/reserved', authenticate, async (req, res) => {
+  try {
+    const active = await Booking.find({ status: { $in: ['requested', 'confirmed'] } }).select('date -_id');
+    const reservedDates = active.map((b) => b.date.toISOString().split('T')[0]);
+    res.json(reservedDates);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve reserved dates: ' + err.message });
   }
 });
 

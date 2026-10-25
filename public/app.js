@@ -108,6 +108,8 @@ function switchMainTab(tabName) {
   // 4. Trigger data refresh for specific tabs
   if (tabName === 'paintings') {
     renderPaintings();
+  } else if (tabName === 'murals') {
+    loadMuralData();
   } else if (tabName === 'activity') {
     loadCustomerDashboardData();
   } else if (tabName === 'admin') {
@@ -580,6 +582,15 @@ async function handleEditPaintingSubmit(e) {
 // ============================================================================
 // 7. Tab 2: Wall Murals Booking Flow
 // ============================================================================
+let reservedMuralDates = [];
+
+function formatDateForInput(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 function setupMuralFormConstraints() {
   const dateInput = document.getElementById('muralDate');
   const sizeInput = document.getElementById('muralSize');
@@ -590,12 +601,55 @@ function setupMuralFormConstraints() {
     const maxD = new Date();
     maxD.setDate(maxD.getDate() + 90);
 
-    dateInput.min = minD.toISOString().split('T')[0];
-    dateInput.max = maxD.toISOString().split('T')[0];
+    dateInput.min = formatDateForInput(minD);
+    dateInput.max = formatDateForInput(maxD);
+    dateInput.addEventListener('change', checkMuralDateAvailability);
   }
 
   if (sizeInput) {
     sizeInput.addEventListener('input', calculateMuralEstimate);
+  }
+}
+
+async function loadReservedMuralDates() {
+  if (!AppState.token) return;
+  try {
+    const res = await fetch('/api/bookings/reserved', { headers: getAuthHeaders() });
+    if (res.ok) {
+      reservedMuralDates = await res.json();
+      updateReservedDatesUI();
+    }
+  } catch (err) {
+    // Ignore error
+  }
+}
+
+function updateReservedDatesUI() {
+  const hintEl = document.getElementById('muralReservedDatesHint');
+  if (!hintEl) return;
+  if (reservedMuralDates.length === 0) {
+    hintEl.textContent = 'All calendar dates between 7 and 90 days out are currently open.';
+  } else {
+    const formatted = reservedMuralDates.map((d) => formatDate(d)).join(', ');
+    hintEl.innerHTML = `<strong>Already booked dates:</strong> ${escapeHtml(formatted)}`;
+  }
+}
+
+function checkMuralDateAvailability() {
+  const dateInput = document.getElementById('muralDate');
+  const msgEl = document.getElementById('muralDateStatusMsg');
+  if (!dateInput || !msgEl) return;
+
+  const val = dateInput.value;
+  if (!val) {
+    msgEl.textContent = '';
+    return;
+  }
+
+  if (reservedMuralDates.includes(val)) {
+    msgEl.innerHTML = `<span style="color: #b33927; font-weight: 600;">⚠️ ${formatDate(val)} is already booked. Please choose another date.</span>`;
+  } else {
+    msgEl.innerHTML = `<span style="color: #175a2d; font-weight: 600;">✓ ${formatDate(val)} is available!</span>`;
   }
 }
 
@@ -627,24 +681,38 @@ async function handleMuralBookingSubmit(e) {
   e.preventDefault();
 
   if (!AppState.token) {
-    showToast('Please sign in as a customer to book a mural.', 'info');
+    showToast('Please sign in to book a mural.', 'info');
     switchMainTab('auth');
     return;
   }
 
-  if (AppState.currentUser && (AppState.currentUser.role === 'admin' || AppState.currentUser.role === 'studio')) {
-    showToast('Administrators cannot create customer bookings.', 'error');
-    return;
-  }
+  const dateInput = document.getElementById('muralDate');
+  const sizeInput = document.getElementById('muralSize');
+  const addressInput = document.getElementById('muralAddress');
 
-  const form = e.target;
-  const date = form.muralDate.value;
-  const size = Number(form.muralSize.value);
-  const address = form.muralAddress.value.trim();
+  const date = dateInput ? dateInput.value : '';
+  const size = sizeInput ? Number(sizeInput.value) : 0;
+  const address = addressInput ? addressInput.value.trim() : '';
 
   if (!date || !size || !address) {
     showToast('Please fill out all booking details.', 'error');
     return;
+  }
+
+  if (size < 10 || size > 500) {
+    showToast('Wall size must be between 10 and 500 sq ft.', 'error');
+    return;
+  }
+
+  if (reservedMuralDates.includes(date)) {
+    showToast('This date is already booked. Please pick another date.', 'error');
+    return;
+  }
+
+  const submitBtn = document.getElementById('muralSubmitBtn');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting Booking...';
   }
 
   try {
@@ -658,16 +726,147 @@ async function handleMuralBookingSubmit(e) {
 
     if (res.ok) {
       showToast('Wall mural booking submitted successfully!', 'success');
-      form.reset();
+      e.target.reset();
       calculateMuralEstimate();
-      await loadCustomerDashboardData();
-      switchMainTab('activity');
-      switchCustomerSubtab('murals');
+      const msgEl = document.getElementById('muralDateStatusMsg');
+      if (msgEl) msgEl.textContent = '';
+
+      if (AppState.currentUser && (AppState.currentUser.role === 'admin' || AppState.currentUser.role === 'studio')) {
+        await loadAdminDashboardData();
+      } else {
+        await loadCustomerDashboardData();
+      }
+      await loadReservedMuralDates();
+      renderMuralTabBookings();
     } else {
       showToast(data.error || 'Failed to submit mural booking.', 'error');
     }
   } catch (err) {
     showToast('Network error: ' + err.message, 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Book Wall Mural';
+    }
+  }
+}
+
+async function loadMuralData() {
+  setupMuralFormConstraints();
+  await loadReservedMuralDates();
+  if (AppState.token) {
+    const isAdmin = AppState.currentUser && (AppState.currentUser.role === 'admin' || AppState.currentUser.role === 'studio');
+    if (isAdmin) {
+      await loadAdminDashboardData();
+    } else {
+      await loadCustomerDashboardData();
+    }
+  }
+  renderMuralTabBookings();
+}
+
+function renderMuralTabBookings() {
+  const tbody = document.getElementById('muralTabBookingsBody');
+  const heading = document.getElementById('muralListHeading');
+  const theadRow = document.getElementById('muralTabTableHeader');
+  if (!tbody) return;
+
+  if (!AppState.token || !AppState.currentUser) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Please sign in to view your mural bookings.</td></tr>`;
+    return;
+  }
+
+  const isAdmin = AppState.currentUser.role === 'admin' || AppState.currentUser.role === 'studio';
+
+  if (isAdmin) {
+    if (heading) heading.textContent = 'All Studio Mural Bookings (Admin)';
+    if (theadRow) {
+      theadRow.innerHTML = `
+        <th>Date</th>
+        <th>Customer</th>
+        <th>Size</th>
+        <th>Price</th>
+        <th>Address</th>
+        <th>Status</th>
+        <th>Decision</th>
+      `;
+    }
+
+    if (!AppState.adminBookings || AppState.adminBookings.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No mural bookings received.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = AppState.adminBookings
+      .map((b) => {
+        const c = b.customerId || {};
+        const status = b.status;
+        const statusPill = `<span class="status-pill status-${status}">${status}</span>`;
+
+        let decision = '<span style="color: var(--text-muted); font-size: 0.8rem;">Decided</span>';
+        if (status === 'requested') {
+          decision = `
+            <div style="display: flex; gap: 6px;">
+              <button type="button" class="btn btn-forest btn-sm" onclick="setBookingStatus('${b._id}', 'confirmed')">Confirm</button>
+              <button type="button" class="btn btn-danger btn-sm" onclick="setBookingStatus('${b._id}', 'declined')">Decline</button>
+            </div>
+          `;
+        }
+
+        return `
+          <tr>
+            <td><strong>${formatDate(b.date)}</strong></td>
+            <td>${escapeHtml(c.email || 'Customer')}</td>
+            <td>${b.size} sq ft</td>
+            <td>${formatPrice(b.price)}</td>
+            <td style="max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(b.address)}">${escapeHtml(b.address)}</td>
+            <td>${statusPill}</td>
+            <td>${decision}</td>
+          </tr>
+        `;
+      })
+      .join('');
+  } else {
+    // Customer
+    if (heading) heading.textContent = 'Your Mural Bookings';
+    if (theadRow) {
+      theadRow.innerHTML = `
+        <th>Execution Date</th>
+        <th>Wall Size</th>
+        <th>Total Price</th>
+        <th>Site Address</th>
+        <th>Status</th>
+        <th>Action</th>
+      `;
+    }
+
+    if (!AppState.customerBookings || AppState.customerBookings.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No wall mural bookings yet. Use the form above to book your first mural.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = AppState.customerBookings
+      .map((b) => {
+        const status = b.status;
+        const statusPill = `<span class="status-pill status-${status}">${status}</span>`;
+        const canCancel = status === 'requested' || status === 'confirmed';
+
+        const action = canCancel
+          ? `<button type="button" class="btn btn-danger btn-sm" onclick="cancelBooking('${b._id}')">Cancel</button>`
+          : '<span style="color: var(--text-muted); font-size: 0.8rem;">Locked</span>';
+
+        return `
+          <tr>
+            <td><strong>${formatDate(b.date)}</strong></td>
+            <td>${b.size} sq ft</td>
+            <td>${formatPrice(b.price)}</td>
+            <td style="max-width: 220px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(b.address)}">${escapeHtml(b.address)}</td>
+            <td>${statusPill}</td>
+            <td>${action}</td>
+          </tr>
+        `;
+      })
+      .join('');
   }
 }
 
@@ -679,7 +878,7 @@ function setupPotteryOptions() {
   if (dateInput) {
     const minD = new Date();
     minD.setDate(minD.getDate() + 14);
-    dateInput.min = minD.toISOString().split('T')[0];
+    dateInput.min = formatDateForInput(minD);
   }
   updatePotterySummary();
 }
@@ -972,7 +1171,11 @@ async function cancelBooking(bookingId) {
 
     if (res.ok) {
       showToast('Mural booking cancelled and date released.', 'info');
-      await loadCustomerDashboardData();
+      await Promise.all([
+        loadCustomerDashboardData(),
+        loadReservedMuralDates()
+      ]);
+      renderMuralTabBookings();
     } else {
       showToast(data.error || 'Failed to cancel booking.', 'error');
     }
@@ -1256,7 +1459,11 @@ async function setBookingStatus(bookingId, status) {
 
     if (res.ok) {
       showToast(`Mural booking ${status}.`, 'success');
-      await loadAdminDashboardData();
+      await Promise.all([
+        loadAdminDashboardData(),
+        loadReservedMuralDates()
+      ]);
+      renderMuralTabBookings();
     } else {
       showToast(data.error || 'Failed to update booking status.', 'error');
     }
