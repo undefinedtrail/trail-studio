@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 
@@ -7,32 +8,50 @@ const path = require('path');
 // ============================================================================
 
 // User Schema
-// Roles supported: 'customer', 'admin', and 'studio' (admin & studio are synonyms)
+// Roles supported: 'customer', 'studio', and 'admin' ('studio' and 'admin' are synonymous)
 const userSchema = new mongoose.Schema(
   {
     email: {
       type: String,
-      required: true,
+      required: [true, 'Email is required'],
       unique: true,
       trim: true,
       lowercase: true,
     },
+    password: {
+      type: String,
+      required: [true, 'Password is required'],
+      minlength: [6, 'Password must be at least 6 characters'],
+    },
     role: {
       type: String,
       required: true,
-      enum: ['customer', 'admin', 'studio'],
+      enum: ['customer', 'studio', 'admin'],
       default: 'customer',
-    },
-    password: {
-      type: String,
-      default: '',
     },
   },
   { timestamps: true }
 );
 
+// Hash password before saving if it has been modified
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Compare candidate password with stored hash
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
 // Painting Schema
-// Paintings are one-of-a-kind. When bought, isAvailable becomes false.
+// Each painting is one-of-a-kind. When bought, isAvailable becomes false.
 const paintingSchema = new mongoose.Schema(
   {
     code: {
@@ -42,7 +61,7 @@ const paintingSchema = new mongoose.Schema(
     },
     title: {
       type: String,
-      required: true,
+      required: [true, 'Title is required'],
       trim: true,
     },
     artist: {
@@ -52,7 +71,7 @@ const paintingSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      required: true,
+      required: [true, 'Price is required'],
       min: [1, 'Price must be greater than 0'],
     },
     isAvailable: {
@@ -74,7 +93,7 @@ const paintingSchema = new mongoose.Schema(
 );
 
 // Order Schema
-// Tracks paintings purchased by customers.
+// Tracks paintings purchased by customers
 const orderSchema = new mongoose.Schema(
   {
     paintingId: {
@@ -97,7 +116,7 @@ const orderSchema = new mongoose.Schema(
 );
 
 // Booking Schema (Wall Painting)
-// Wall size must be 10-500 sq ft. Each calendar date can only be booked once.
+// Wall size must be 10-500 sq ft. Each calendar date can have only one active booking.
 const bookingSchema = new mongoose.Schema(
   {
     customerId: {
@@ -133,9 +152,9 @@ const bookingSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Concurrency & Double-Booking Guard:
+// Concurrency Guard:
 // Partial unique index ensures that no two active bookings ('requested' or 'confirmed')
-// can occupy the exact same date, even under concurrent database requests.
+// can occupy the exact same date, even under simultaneous concurrent submissions.
 bookingSchema.index(
   { date: 1 },
   {
@@ -145,7 +164,7 @@ bookingSchema.index(
 );
 
 // PotteryRequest Schema (Custom Pottery)
-// Customers choose item & glaze from seed.json, quantity (1-12), and needed-by date >= 14 days.
+// Customers choose item & glaze from seed data, quantity (1-12), and needed-by date >= 14 days.
 const potteryRequestSchema = new mongoose.Schema(
   {
     customerId: {
@@ -189,10 +208,17 @@ const Booking = mongoose.model('Booking', bookingSchema);
 const PotteryRequest = mongoose.model('PotteryRequest', potteryRequestSchema);
 
 // ============================================================================
-// 2. Database Connection Helper
+// 2. Database Connection Helper with Test Isolation
 // ============================================================================
-async function connectDB(mongoUri) {
-  const uri = mongoUri || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/trail_studio';
+function getMongoUri() {
+  if (process.env.NODE_ENV === 'test') {
+    return process.env.MONGO_URI_TEST || 'mongodb://127.0.0.1:27017/trail_studio_test';
+  }
+  return process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/trail_studio';
+}
+
+async function connectDB(customUri) {
+  const uri = customUri || getMongoUri();
   try {
     await mongoose.connect(uri);
     console.log(`[Database] Connected to MongoDB at ${uri}`);
@@ -203,7 +229,7 @@ async function connectDB(mongoUri) {
 }
 
 // ============================================================================
-// 3. Helper: Normalize Date to UTC Midnight
+// 3. Helper: Normalize Date to UTC Midnight (avoids timezone skew)
 // ============================================================================
 function normalizeDate(input) {
   const d = new Date(input);
@@ -212,7 +238,7 @@ function normalizeDate(input) {
 }
 
 // ============================================================================
-// 4. Default Seed Data Helper (Uses seed.json strictly)
+// 4. Default Seed Data Helper (Uses seed.json)
 // ============================================================================
 async function seedDefaults() {
   try {
@@ -224,30 +250,34 @@ async function seedDefaults() {
       seedData = JSON.parse(raw);
     }
 
-    // Seed studio user and sample customers
+    // Seed default studio and customer users if none exist
     const userCount = await User.countDocuments();
     if (userCount === 0) {
-      console.log('[Seed] Seeding initial users from seedData...');
-      const studioEmail = (seedData && seedData.studioAccount && seedData.studioAccount.email) 
-        ? seedData.studioAccount.email.toLowerCase() 
+      console.log('[Seed] Seeding initial users...');
+      const studioEmail = (seedData && seedData.studioAccount && seedData.studioAccount.email)
+        ? seedData.studioAccount.email.toLowerCase()
         : 'studio@artstudio.in';
-      const studioPass = (seedData && seedData.studioAccount && seedData.studioAccount.password) 
-        ? seedData.studioAccount.password 
+      const studioPass = (seedData && seedData.studioAccount && seedData.studioAccount.password)
+        ? seedData.studioAccount.password
         : 'Studio@123';
 
-      await User.create([
-        { email: studioEmail, role: 'studio', password: studioPass },
-        { email: 'admin@trail.studio', role: 'admin' },
-        { email: 'alice@example.com', role: 'customer' },
-        { email: 'bob@example.com', role: 'customer' },
-      ]);
-      console.log('[Seed] Users seeded successfully.');
+      // Creating through new User().save() ensures password hashing runs
+      const studioUser = new User({ email: studioEmail, role: 'studio', password: studioPass });
+      await studioUser.save();
+
+      const alice = new User({ email: 'alice@example.com', role: 'customer', password: 'Customer@123' });
+      await alice.save();
+
+      const bob = new User({ email: 'bob@example.com', role: 'customer', password: 'Customer@123' });
+      await bob.save();
+
+      console.log('[Seed] Default users seeded successfully.');
     }
 
     // Seed paintings from seed.json
     const paintingCount = await Painting.countDocuments();
     if (paintingCount === 0 && seedData && Array.isArray(seedData.paintings)) {
-      console.log('[Seed] Seeding paintings strictly from seed.json...');
+      console.log('[Seed] Seeding paintings from seed.json...');
       const paintingDocs = seedData.paintings.map((p) => ({
         code: p.id,
         title: p.title,
@@ -284,6 +314,7 @@ module.exports = {
   Booking,
   PotteryRequest,
   connectDB,
+  getMongoUri,
   normalizeDate,
   seedDefaults,
 };
