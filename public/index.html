@@ -529,19 +529,6 @@
       margin-bottom: 16px;
       font-size: 0.82rem;
     }
-
-    /* Footer */
-    footer {
-      margin-top: 48px;
-      padding-top: 18px;
-      border-top: 1px solid var(--border);
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
   </style>
 </head>
 <body>
@@ -573,7 +560,7 @@
     <div id="globalNotification"></div>
 
     <!-- Auth View (Shown when not logged in) -->
-    <section id="viewAuth" class="auth-card" style="display:none;">
+    <section id="viewAuth" class="auth-card">
       <div class="auth-tabs">
         <button class="auth-tab-btn active" id="tabLoginBtn" onclick="toggleAuthMode('login')">Sign In</button>
         <button class="auth-tab-btn" id="tabRegisterBtn" onclick="toggleAuthMode('register')">Create Customer Account</button>
@@ -987,12 +974,6 @@
         </form>
       </div>
     </div>
-
-    <!-- Footer -->
-    <footer>
-      <span>Trail Studio · Handcrafted Traditional Art, Murals & Custom Pottery</span>
-      <span>Express + MongoDB + Strict Server-Side RBAC</span>
-    </footer>
   </div>
 
   <!-- Vanilla Client Logic -->
@@ -1014,7 +995,7 @@
     let cachedPaintings = [];
     let cachedCustomerPottery = [];
 
-    window.addEventListener('DOMContentLoaded', async () => {
+    async function initApp() {
       await fetchConfig();
       setupDateRangeConstraints();
       setupPotteryOptions();
@@ -1032,18 +1013,30 @@
         } catch (e) {}
       }
       showAuthView();
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      initApp();
+    }
 
     function showAuthView() {
-      document.getElementById('viewAuth').style.display = 'block';
-      document.getElementById('sessionBar').style.display = 'none';
-      document.getElementById('appContent').style.display = 'none';
+      const auth = document.getElementById('viewAuth');
+      const session = document.getElementById('sessionBar');
+      const content = document.getElementById('appContent');
+      if (auth) auth.style.display = 'block';
+      if (session) session.style.display = 'none';
+      if (content) content.style.display = 'none';
     }
 
     function showAuthenticatedUI() {
-      document.getElementById('viewAuth').style.display = 'none';
-      document.getElementById('sessionBar').style.display = 'flex';
-      document.getElementById('appContent').style.display = 'block';
+      const auth = document.getElementById('viewAuth');
+      const session = document.getElementById('sessionBar');
+      const content = document.getElementById('appContent');
+      if (auth) auth.style.display = 'none';
+      if (session) session.style.display = 'flex';
+      if (content) content.style.display = 'block';
 
       document.getElementById('sessionEmail').textContent = currentUser.email;
       const roleBadge = document.getElementById('sessionRole');
@@ -1099,16 +1092,19 @@
       toggleAuthMode('login');
       document.getElementById('loginEmail').value = email;
       document.getElementById('loginPassword').value = password;
-      const form = document.getElementById('loginForm');
-      form.dispatchEvent(new Event('submit', { cancelable: true }));
+      submitLoginForm(email, password);
     }
 
     async function handleLoginSubmit(e) {
-      e.preventDefault();
-      const btn = document.getElementById('btnLoginSubmit');
-      const msgBox = document.getElementById('authMessage');
+      if (e) e.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value;
+      await submitLoginForm(email, password);
+    }
+
+    async function submitLoginForm(email, password) {
+      const btn = document.getElementById('btnLoginSubmit');
+      const msgBox = document.getElementById('authMessage');
 
       btn.disabled = true;
       btn.textContent = 'Signing in...';
