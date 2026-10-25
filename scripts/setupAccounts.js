@@ -1,6 +1,15 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const { connectDB, seedDefaults, User } = require('../models/db');
+const {
+  connectDB,
+  seedDefaults,
+  User,
+  Painting,
+  Order,
+  Booking,
+  PotteryRequest,
+  normalizeDate,
+} = require('../models/db');
 
 async function setupAccounts() {
   console.log('--- Trail Studio Account Initialization ---');
@@ -49,6 +58,87 @@ async function setupAccounts() {
       await admin.save();
       console.log(`[Setup] Assigned 'admin' role to ${adminEmail}`);
     }
+  }
+
+  // 3. Ensure initial demonstration activity exists for the customer (Idempotent)
+  const orderCount = await Order.countDocuments({ customerId: customer._id });
+  if (orderCount === 0) {
+    const p4 = await Painting.findOne({ code: 'p-004' });
+    const p9 = await Painting.findOne({ code: 'p-009' });
+    if (p4) {
+      await Order.create({
+        paintingId: p4._id,
+        customerId: customer._id,
+        status: 'placed',
+      });
+      p4.isAvailable = false;
+      await p4.save();
+    }
+    if (p9) {
+      await Order.create({
+        paintingId: p9._id,
+        customerId: customer._id,
+        status: 'placed',
+      });
+      p9.isAvailable = false;
+      await p9.save();
+    }
+    console.log('[Setup] Seeded initial customer painting orders (p-004, p-009).');
+  }
+
+  const bookingCount = await Booking.countDocuments({ customerId: customer._id });
+  if (bookingCount === 0) {
+    const d1 = normalizeDate(new Date(Date.now() + 14 * 86400000));
+    const d2 = normalizeDate(new Date(Date.now() + 28 * 86400000));
+    await Booking.create({
+      customerId: customer._id,
+      date: d1,
+      size: 120,
+      price: 120 * 150,
+      address: '42 Lake Palace Road, Udaipur',
+      status: 'confirmed',
+    });
+    await Booking.create({
+      customerId: customer._id,
+      date: d2,
+      size: 180,
+      price: 180 * 150,
+      address: '15 Civil Lines, Jaipur',
+      status: 'requested',
+    });
+    console.log('[Setup] Seeded initial customer mural bookings.');
+  }
+
+  const potteryCount = await PotteryRequest.countDocuments({ customerId: customer._id });
+  if (potteryCount === 0) {
+    const pD1 = normalizeDate(new Date(Date.now() + 18 * 86400000));
+    const pD2 = normalizeDate(new Date(Date.now() + 25 * 86400000));
+    const pD3 = normalizeDate(new Date(Date.now() + 30 * 86400000));
+    await PotteryRequest.create({
+      customerId: customer._id,
+      itemId: 'i-01',
+      glazeId: 'g-01',
+      quantity: 6,
+      neededBy: pD1,
+      status: 'requested',
+    });
+    await PotteryRequest.create({
+      customerId: customer._id,
+      itemId: 'i-03',
+      glazeId: 'g-03',
+      quantity: 2,
+      neededBy: pD2,
+      status: 'accepted',
+    });
+    await PotteryRequest.create({
+      customerId: customer._id,
+      itemId: 'i-02',
+      glazeId: 'g-04',
+      quantity: 1,
+      neededBy: pD3,
+      status: 'requested',
+    });
+    console.log('[Setup] Seeded initial customer pottery requests.');
   }
 
   console.log('\n================================================================================');
