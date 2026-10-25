@@ -62,7 +62,7 @@ If two customers submit requests for the same calendar date concurrently, MongoD
   3. Custom pottery commission requests with seed vessel and glaze options, 1–12 piece quantities, and 14-day curing schedules.
 - Complete lifecycle status flows for orders (`placed`, `cancelled`), bookings (`requested`, `confirmed`, `declined`, `cancelled`), and pottery (`requested`, `accepted`, `declined`, `cancelled`).
 - Strict server-side RBAC and customer privacy isolation (404 on unowned records).
-- Modular frontend architecture cleanly separated into `index.html`, `styles.css`, and `app.js` with an Indian artisan visual aesthetic.
+- Modular frontend architecture with three dedicated service tabs (Paintings, Wall Murals, Pottery), a customer activity tab, and a studio administration tab, cleanly separated into index.html, styles.css, and app.js with an authentic artisan visual aesthetic.
 - 55 automated API and security tests with test database safety checks.
 
 **What was left out (out of scope):**

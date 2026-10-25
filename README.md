@@ -10,25 +10,33 @@ GitHub Repository: [https://github.com/undefinedtrail/trail-studio](https://gith
 
 ## What the Studio Offers
 
-### 1. Artisan Folk Paintings
+The application organizes the three studio services into three clearly separated main navigation tabs, with dedicated views for patron activity and administration:
+
+### 1. Paintings Tab
 - **Authentic Collection**: Original Indian folk paintings loaded directly from the provided seed dataset (`seed.json`), featuring Madhubani, Warli, Tanjore, Pattachitra, Kalamkari, Gond, and Cheriyal styles with artist credits and rupee prices.
 - **One of a Kind**: Each painting is an original piece and can only be bought once.
 - **Safe Purchasing**: The server verifies painting availability atomically directly in MongoDB, so two customers clicking purchase at the exact same moment can never both acquire the same painting.
 - **Order Cancellation**: If a customer cancels an order, the painting is automatically released back to available stock.
 - **Studio Inventory Control**: Administrators can add new paintings and update details for available artworks.
 
-### 2. Architectural Wall Murals
+### 2. Wall Murals Tab
+- **Dedicated Service View**: Complete architectural mural commission tab with process guidelines and transparent pricing.
 - **Booking Rules**: Customers select an execution date between 7 and 90 days in advance, specify wall size between 10 and 500 square feet, and provide the site address.
-- **Transparent Pricing**: The price is calculated in real time as wall size multiplied by the studio rate (₹150 per sq ft from seed data).
+- **Live Price Calculation**: The price is calculated in real time as wall size multiplied by the studio rate (₹150 per sq ft from seed data).
 - **Date Reservation & Conflict Prevention**: Each calendar date can have only one active booking. A database index prevents double-booking the same date even under simultaneous submissions.
 - **Studio Decisions**: Administrators can review, confirm, or decline mural requests.
 - **Customer Cancellation**: Customers can cancel their booking, which immediately releases the calendar date for other customers.
 
-### 3. Custom Handmade Pottery
+### 3. Pottery Tab
+- **Dedicated Ceramics Studio**: Purpose-built bespoke wheel commission interface with visual vessel selectors and tactile glaze swatches.
 - **Seed Catalog**: Customers select from traditional earthenware shapes (`Kulhad`, `Surahi`, `Matka`, `Diya set`, `Gamla`) and natural mineral glazes from the seed data.
 - **Order Quantities & Timeline**: Quantity is between 1 and 12 pieces, and the requested completion date must be at least 14 days in advance to allow proper wheel throwing, sun curing, and kiln firing.
 - **Studio Decisions**: Administrators can accept or decline pottery commission requests.
 - **Customer Modifications**: Customers can edit details or cancel requests while they remain in `requested` status. Once accepted or declined, the request is finalized.
+
+### 4. My Activity & Studio Admin Tabs
+- **My Activity**: Dedicated customer tab organizing your personal painting orders, mural bookings, and pottery requests with live statuses and allowed cancellation/edit actions.
+- **Studio Admin**: Dedicated administrator tab for inventory management, customer order reviews, mural booking decisions, and pottery request approvals.
 
 ---
 
@@ -107,13 +115,13 @@ The application will connect to MongoDB, seed the folk art collection from `seed
 
 1. **Sign in as Customer**:
    - Log in using `user@gmail.com` (or create a new customer account using the registration form).
-   - Browse the folk art gallery and purchase an available painting.
-   - Fill out the wall mural form with your desired wall size and date to see real-time price calculation.
-   - Submit a custom pottery request selecting vessel shape and mineral glaze.
-   - Visit the **My Commissions** dashboard to view your collection and cancel an order or booking.
+   - In the **Paintings** tab, browse the folk art gallery and purchase an available painting.
+   - In the **Wall Murals** tab, enter wall size and date to see the live price estimate and submit a booking.
+   - In the **Pottery** tab, select vessel silhouette, mineral glaze, quantity, and handover date to commission pottery.
+   - In the **My Activity** tab, view your painting orders, mural bookings, and pottery requests with cancel/edit actions.
 
 2. **Sign in as Administrator**:
    - Log in using `admin@gmail.com`.
-   - Access the **Studio Dashboard** to view incoming customer orders across all three studio services.
+   - Access the **Studio Admin** tab to view incoming customer orders across all three studio services.
    - Confirm or decline pending wall mural commissions and pottery requests.
-   - Add a new painting to the catalog or edit pricing and details of available artworks.
+   - Add a new painting to the catalog or edit pricing and details of available artworks in the gallery inventory.
